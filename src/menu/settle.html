@@ -109,4 +109,13 @@ document.getElementById('TT').textContent=tot.toLocaleString();
 const ts=document.getElementById('toast');function t(m){ts.textContent=m;ts.style.display='block';clearTimeout(t.k);t.k=setTimeout(()=>ts.style.display='none',1400);}
 let win=false;document.getElementById('S').onclick=()=>{win=!win;F.classList.toggle('win',win);T.textContent=win?'大破黄巾':'兵败涿郡';S.textContent=win?'胜':'败';};
 document.getElementById('B').onclick=()=>t('评定：按波次、斩首、用时综合 → 校尉（样板）');
+
+(function(){const F=document.getElementById('F'),ttl=document.querySelector('.ttl'),head=F.querySelector('.head');
+ const rest=[...F.children].filter(e=>e!==head).concat([...head.children].filter(e=>e!==ttl));
+ function run(){const fr=F.getBoundingClientRect(),r=ttl.getBoundingClientRect();if(!r.width)return;
+  const dx=fr.left+fr.width/2-(r.left+r.width/2),dy=fr.top+fr.height*0.42-(r.top+r.height/2),sc=Math.min(2.6,fr.width*0.7/r.width);
+  rest.forEach(e=>{e.style.transition='none';e.style.opacity=0});
+  ttl.style.transformOrigin='center';ttl.style.transition='none';ttl.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+  setTimeout(()=>{ttl.style.transition='transform .7s cubic-bezier(.2,.8,.2,1)';ttl.style.transform='none';rest.forEach(e=>{e.style.transition='opacity .6s .35s';e.style.opacity=1});},1300);}
+ run();})();
 </script></body></html>

@@ -599,7 +599,7 @@ function tuftCell(i,j){const key=i+','+j;let L=tcache.get(key);if(L)return L;L=[
 const $=id=>document.getElementById(id);
 const stage=$('stage'),cv=$('cv'),ctx=cv.getContext('2d');
 let SQ=0.7,S=1,N=250,phoneSim=false,DPR=1,paused=true,over=false;
-const hero={x:0,y:0,fa:0,wk:0,moving:false,hp:120,maxhp:120};let hurtT=0,ampT=0,atkMul=1;const texts=[];let DCD=0.9;let cbT=0,rgT=0,cbOn=false,rgOn=false,healMul=1,fac='';let spdMul=1,takeMul=1,crowdMul=false,bigMul=1,smallMul=1,rangedMul=1,meleeMul=1,allMul=1;let stopT=0,shk=0;const dnums=[];let pdCnt=0,hitsTaken=0,hitsW4=0,bruteK=0,archK=0;
+const hero={x:0,y:0,fa:0,wk:0,moving:false,hp:120,maxhp:120};let hurtT=0,ampT=0,atkMul=1;const texts=[];let DCD=0.9;let titleId='',statusT=0,statusKey='';let cbT=0,rgT=0,cbOn=false,rgOn=false,healMul=1,fac='';let spdMul=1,takeMul=1,crowdMul=false,bigMul=1,smallMul=1,rangedMul=1,meleeMul=1,allMul=1;let stopT=0,shk=0;const dnums=[];let pdCnt=0,hitsTaken=0,hitsW4=0,bruteK=0,archK=0;
 const enemies=[],effects=[],slashes=[],ghosts=[],corpses=[];let dashCd=0;
 let dmgSt={},comboMax=0,retreatT=0,bossPhase=false,won=false,started=false,kills=0,combo=0,comboT=0,slashT=0,skillIdx=0,tm=0,tclock=0,waveT=0,bossDone=false;
 const keys={};
@@ -816,13 +816,23 @@ function syncSel(){document.querySelectorAll('#panel select').forEach((sel,i)=>{
  sl.innerHTML='<option value="0">关（敌人不攻击）</option><option value="0.5">轻</option><option value="1" selected>标准</option><option value="1.6">重</option>';sl.onchange=()=>{atkMul=+sl.value;};h2.appendChild(sl);h.appendChild(h2);
  p.insertBefore(h,p.firstChild);})();
 (function(){const C=window.__CFG;const O=[['短兵',['hengsao','lianzhan','','','']],['射艺',['jianyu','feidao','','','']],['长兵',['qiang','','','','']],['长兵',['qiang','','','','']],['道术',['huogong','','','','']]];
-  if(C&&C.title)applyTitle(C.title);applyFac((C&&C.faction)||'xiangyong');
+  if(C&&C.title){titleId=C.title;applyTitle(C.title);}applyFac((C&&C.faction)||'xiangyong');
   if(C&&C.o!=null){const o=O[C.o]||O[0];mainCat=o[0];for(let i=0;i<5;i++){loadout[i]=o[1][i];cds[i]=0.2*i;}buildHud();syncSel();started=true;paused=false;}else startPick();})();
 (function(){const b=document.createElement('button');b.textContent='退';b.title='弃战退出';b.style.cssText='position:absolute;left:calc(var(--u)*8);top:calc(var(--u)*64);z-index:7;width:calc(var(--u)*44);height:calc(var(--u)*44);border-radius:50%;border:1px solid #6b5a8a;background:rgba(20,14,30,.6);color:#bfae82;font-size:calc(var(--u)*20);opacity:.7';
  b.onclick=()=>{if(over)return;if(!b._c){b._c=1;b.textContent='确';b.style.width='auto';b.style.padding='0 10px';b.title=kills===0?'再点一次：弃甲而逃，投奔黄巾':'再点一次：弃战，计为败';setTimeout(()=>{b._c=0;b.textContent='退';b.style.padding='';b.style.width='calc(var(--u)*44)'},2500);return;}over=true;const r=endReport(false);r.deserter=kills===0;if(parent!==window){parent.postMessage(r,'*');}else location.reload();};
  stage.appendChild(b);})();
 window.__dbg={endWave:()=>endWave(),info:()=>fac+' '+loadout.join()+' hp'+hero.maxhp};
 const edgeEl=document.createElement('div');edgeEl.style.cssText='position:absolute;pointer-events:none;display:none;top:calc(var(--u)*72);left:50%;transform:translateX(-50%);z-index:6;color:#ffb089;background:rgba(40,10,6,.6);padding:4px 12px;border-radius:6px;font-size:calc(var(--u)*22);white-space:nowrap';stage.appendChild(edgeEl);
+const stEl=document.createElement('div');stEl.style.cssText='position:absolute;pointer-events:none;left:50%;bottom:calc(var(--u)*44);transform:translateX(-50%);z-index:6;display:flex;gap:calc(var(--u)*6);flex-wrap:wrap;justify-content:center;width:50%';stage.appendChild(stEl);
+function renderStatus(){const L=[];
+  if(fac&&fac!=='xiangyong'&&FAC[fac])L.push(['🚩',FAC[fac].n,'#e8d9a8']);
+  if(titleId&&TITLES[titleId])L.push(['🏅',TITLES[titleId].n,'#e8d9a8']);
+  if(moraleMul<1)L.push(['😰','士气 -'+Math.round((1-moraleMul)*100)+'%','#ff9a6a']);
+  if(cbOn&&cbT>0)L.push(['⚔','追击 +20% '+cbT.toFixed(1)+'s','#9fe08a']);
+  if(rgOn&&rgT>0)L.push(['🔥','愤怒 +25% '+rgT.toFixed(1)+'s','#9fe08a']);
+  if(crowdMul){const n=nearest(40,150).length;if(n>0)L.push(['👥','人多 +'+Math.min(40,n*4)+'%','#9fe08a']);}
+  const key=JSON.stringify(L);if(key===statusKey)return;statusKey=key;
+  stEl.innerHTML=L.map(x=>'<span style="background:rgba(20,14,8,.72);border:1px solid rgba(200,170,100,.45);border-radius:6px;padding:calc(var(--u)*2) calc(var(--u)*8);font-size:calc(var(--u)*16);color:'+x[2]+';white-space:nowrap">'+x[0]+' '+x[1]+'</span>').join('');}
 function floatTxt(t,c){texts.push({x:hero.x,y:hero.y,t:0,s:t,c:c||'#ffe28a'});}
 function hitHero(dmg){if(hero.dash){if(!hero.dash.pf){hero.dash.pf=true;pdCnt++;ampT=3;floatTxt('完美闪避');}return;}sfx('hurt');
   if(hurtT>0||atkMul<=0)return;const d=Math.max(1,Math.round(dmg*atkMul*takeMul));hero.hp-=d;hurtT=0.5;rgT=4;hitsTaken++;if(wave<=4)hitsW4++;stopT=Math.max(stopT,0.05);shk=Math.max(shk,6);floatTxt('-'+d,'#ff6a5a');if(hero.hp<=0){hero.hp=0;heroDie();}}
@@ -901,7 +911,7 @@ function update(dt){
   const tn=targetN();if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){for(let k=0;k<3&&cnt<tn;k++,cnt++)spawn(pickType());}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,8+Math.floor(Math.random()*8));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
-    const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
+    statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
   if(!bossPhase&&retreatT<=0&&(wave===4||wave===7)&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
@@ -1149,6 +1159,15 @@ const ts=document.getElementById('toast');function t(m){ts.textContent=m;ts.styl
  document.querySelector('.gain .lb').textContent=win?'战果':'败因';
  document.getElementById('M').firstChild.textContent=R.grade||(win?'校尉':'小卒');if(R.newT&&R.newT.length){const g=document.querySelector('.gain span:last-child');g.textContent+=' ｜ 获得称号：'+R.newT.join('、');}})();
 document.getElementById('B').onclick=()=>t('评定规则待定');
+
+(function(){const F=document.getElementById('F'),ttl=document.querySelector('.ttl'),head=F.querySelector('.head');
+ const rest=[...F.children].filter(e=>e!==head).concat([...head.children].filter(e=>e!==ttl));
+ function run(){const fr=F.getBoundingClientRect(),r=ttl.getBoundingClientRect();if(!r.width)return;
+  const dx=fr.left+fr.width/2-(r.left+r.width/2),dy=fr.top+fr.height*0.42-(r.top+r.height/2),sc=Math.min(2.6,fr.width*0.7/r.width);
+  rest.forEach(e=>{e.style.transition='none';e.style.opacity=0});
+  ttl.style.transformOrigin='center';ttl.style.transition='none';ttl.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+  setTimeout(()=>{ttl.style.transition='transform .7s cubic-bezier(.2,.8,.2,1)';ttl.style.transform='none';rest.forEach(e=>{e.style.transition='opacity .6s .35s';e.style.opacity=1});},1300);}
+ run();})();
 <@/script></body></html>
 </script>
 
