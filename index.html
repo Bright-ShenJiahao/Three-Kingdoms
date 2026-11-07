@@ -934,8 +934,8 @@ function kill(j,p){cbT=2;const e=enemies[j],T=TYPES[e.type];if(e.type==='brute'|
 // ===== 武艺系统 =====
 const fxs=[];
 let curK=null,mainCat='短兵';
-const CAT={jian:'短兵',hengsao:'短兵',lianzhan:'短兵',xuanfeng:'短兵',daolun:'短兵',qiang:'长兵',feidao:'射艺',jianyu:'射艺',huogong:'道术',pili:'道术',zhendi:'短兵',chong:'体术',dilie:'短兵',shuanghuan:'短兵',sixiang:'短兵',tianbeng:'短兵'};
-const TIER={hengsao:'黄',lianzhan:'黄',xuanfeng:'玄',zhendi:'玄',dilie:'地',shuanghuan:'地',sixiang:'天',tianbeng:'天'},TMIN={'黄':0,'玄':2,'地':4,'天':6};
+const CAT={jian:'短兵',hengsao:'短兵',lianzhan:'短兵',xuanfeng:'短兵',daolun:'短兵',qiang:'长兵',feidao:'射艺',jianyu:'射艺',huogong:'道术',pili:'道术',zhendi:'短兵',chong:'体术',dilie:'短兵',shuanghuan:'短兵',sixiang:'短兵',tianbeng:'短兵',huima:'短兵',feilun:'短兵',xuehe:'短兵',wanren:'短兵'};
+const TIER={hengsao:'黄',lianzhan:'黄',xuanfeng:'玄',zhendi:'玄',dilie:'地',shuanghuan:'地',sixiang:'天',tianbeng:'天',huima:'黄',feilun:'玄',xuehe:'地',wanren:'天'},TMIN={'黄':0,'玄':2,'地':4,'天':6};
 function profMul(){return curK?(CAT[curK.id]===mainCat?1.3:0.7):1;}
 function addFx(life,upd,drw){const k=curK,w=upd&&(k?((dt,t)=>{const o=curK;curK=k;try{upd(dt,t);}finally{curK=o;}}):upd);fxs.push({t:0,life,upd:w,drw});}
 function spark(x,y,dx,dy){const a0=Math.atan2(dy,dx),n=5,ang=[];for(let i=0;i<n;i++)ang.push(a0+(Math.random()*2-1)*1.1);
@@ -1057,10 +1057,28 @@ const SK={
    addFx(1.1,dt=>{px+=dx*340*dt;py+=dy*340*dt/SQ;for(const e of enemies.slice()){if(hit.has(e))continue;const ex=e.x-px,ey=(e.y-py)*SQ,al=ex*dx+ey*dy,pe=Math.abs(-ex*dy+ey*dx);if(Math.abs(al)<34*S&&pe<95*S+TYPES[e.type].r*0.5){hit.add(e);hurt(e,9,dx,dy,44);}}shk=Math.max(shk,2);},
    t=>{const a=Math.min(1,(1.1-t)/0.35);ctx.save();ctx.globalAlpha=a;ctx.translate(px,py*SQ-6*S);ctx.rotate(ang);ctx.scale(1,0.75);
     const g=ctx.createLinearGradient(-90*S,0,30*S,0);g.addColorStop(0,'rgba(255,120,60,0)');g.addColorStop(1,'rgba(255,235,170,.9)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(30*S,0);ctx.lineTo(-90*S,-95*S);ctx.lineTo(-90*S,95*S);ctx.closePath();ctx.fill();
-    ctx.shadowColor='#ffd070';ctx.shadowBlur=14;ctx.strokeStyle='#fff';ctx.lineWidth=9*S;ctx.lineCap='round';ctx.beginPath();ctx.arc(-40*S,0,110*S,-1.1,1.1);ctx.stroke();ctx.restore();});}}
+    ctx.shadowColor='#ffd070';ctx.shadowBlur=14;ctx.strokeStyle='#fff';ctx.lineWidth=9*S;ctx.lineCap='round';ctx.beginPath();ctx.arc(-40*S,0,110*S,-1.1,1.1);ctx.stroke();ctx.restore();});}},
+ huima:{n:'回马刀',g:'🔄',cd:2.6,need:150,cast(){const [dx,dy]=aimDir(),a0=Math.atan2(dy/0.8,dx);sweep(a0,1.05,115*S*RM,4,20,1,['rgba(255,200,110,.35)','rgba(255,235,180,.85)']);
+   let w=0.3;addFx(0.4,dt=>{if(w<0)return;w-=dt;if(w<0){popPose='back';popT=0.35;sweep(a0+Math.PI,1.57,115*S*RM,4,22,-1,['rgba(255,140,110,.35)','rgba(255,215,205,.85)']);}});}},
+ feilun:{n:'飞轮刃',g:'💫',cd:4.5,need:350,cast(){const [dx,dy]=aimDir();let px=hero.x,py=hero.y,vx=dx*340,vy=dy*340/SQ;const h1=new Set(),h2=new Set(),T=0.8;
+   addFx(2*T,(dt,t)=>{if(t<T){px+=vx*dt;py+=vy*dt;}else{const ex=hero.x-px,ey=(hero.y-py)*SQ,l=Math.hypot(ex,ey)||1;px+=ex/l*400*dt;py+=ey/l*400*dt/SQ;}
+     const hs=t<T?h1:h2;for(const e of enemies.slice()){if(hs.has(e))continue;const ex=e.x-px,ey=(e.y-py)*SQ;if(ex*ex+ey*ey<(34*S+TYPES[e.type].r*0.6)**2){hs.add(e);const [nx,ny]=nrm(ex,ey);hurt(e,3,nx,ny,12);}}},
+   t=>{const a=Math.min(1,(2*T-t)/0.3);ctx.save();ctx.globalAlpha=a;ctx.translate(px,py*SQ-18*S);ctx.rotate(t*22);ctx.shadowColor='#9cf';ctx.shadowBlur=10;ctx.strokeStyle='#eaf6ff';ctx.lineWidth=8*S;ctx.lineCap='round';
+    for(let i=0;i<3;i++){ctx.rotate(2.094);ctx.beginPath();ctx.arc(0,0,26*S,-0.9,0.9);ctx.stroke();}ctx.restore();});}},
+ xuehe:{n:'血河斩',g:'🩸',cd:6,need:380,cast(){const [dx,dy]=aimDir(),L=210*S,ang=Math.atan2(dy,dx),x0=hero.x,y0=hero.y;let tk=0;const hit=new Set();
+   addFx(3.2,(dt,t)=>{const k=Math.min(1,t/0.3);if(t<0.3){for(const e of enemies.slice()){if(hit.has(e))continue;const ex=e.x-x0,ey=(e.y-y0)*SQ,al=ex*dx+ey*dy,pe=Math.abs(-ex*dy+ey*dx);if(al>-10&&al<L*k&&pe<30*S+TYPES[e.type].r*0.5){hit.add(e);hurt(e,4,dx,dy,22);}}}
+     tk-=dt;if(tk<=0&&t>0.2){tk=0.4;for(const e of enemies.slice()){const ex=e.x-x0,ey=(e.y-y0)*SQ,al=ex*dx+ey*dy,pe=Math.abs(-ex*dy+ey*dx);if(al>-10&&al<L&&pe<34*S+TYPES[e.type].r*0.5)hurt(e,2,0,0,0);}}},
+   t=>{const k=Math.min(1,t/0.3),a=Math.min(1,(3.2-t)/0.6);ctx.save();ctx.globalAlpha=a*0.85;ctx.translate(x0,y0*SQ);ctx.rotate(ang);ctx.scale(1,0.6);
+    const g=ctx.createLinearGradient(0,0,L,0);g.addColorStop(0,'rgba(190,20,30,.75)');g.addColorStop(1,'rgba(120,10,20,.25)');ctx.fillStyle=g;ctx.fillRect(0,-34*S,L*k,68*S);
+    ctx.strokeStyle='rgba(255,130,120,.8)';ctx.lineWidth=2*S;for(let i=0;i<5;i++){const yy=(i-2)*12*S+Math.sin(t*4+i)*4*S;ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(L*k,yy);ctx.stroke();}ctx.restore();});shk=Math.max(shk,2);}},
+ wanren:{n:'万刃归宗',g:'🌟',cd:7,need:0,cast(){const N=12,T=0.55,hs=[];for(let i=0;i<N;i++)hs.push([new Set(),new Set()]);const px=[],py=[];for(let i=0;i<N;i++){px.push(hero.x);py.push(hero.y);}
+   addFx(2*T,(dt,t)=>{for(let i=0;i<N;i++){const an=i*6.2832/N;if(t<T){px[i]+=Math.cos(an)*330*dt;py[i]+=Math.sin(an)*330*dt/SQ;}else{const ex=hero.x-px[i],ey=(hero.y-py[i])*SQ,l=Math.hypot(ex,ey)||1;px[i]+=ex/l*420*dt;py[i]+=ey/l*420*dt/SQ;}
+      const h=hs[i][t<T?0:1];for(const e of enemies.slice()){if(h.has(e))continue;const ex=e.x-px[i],ey=(e.y-py[i])*SQ;if(ex*ex+ey*ey<(24*S+TYPES[e.type].r*0.6)**2){h.add(e);const [nx,ny]=nrm(ex,ey);hurt(e,3,nx,ny,12);}}}},
+   t=>{const a=Math.min(1,(2*T-t)/0.25);ctx.save();ctx.globalAlpha=a;ctx.shadowColor='rgba(150,220,255,.95)';ctx.shadowBlur=8;ctx.strokeStyle='#eef9ff';ctx.lineWidth=5*S;ctx.lineCap='round';
+    for(let i=0;i<N;i++){const an=t<T?i*6.2832/N:Math.atan2((py[i]-hero.y)*-SQ,(px[i]-hero.x)*-1);ctx.save();ctx.translate(px[i],py[i]*SQ-18*S);ctx.rotate(an);ctx.beginPath();ctx.arc(-10*S,0,26*S,-0.9,0.9);ctx.stroke();ctx.restore();}ctx.restore();});}}
 };
 const SKID=Object.keys(SK);for(const id of SKID)SK[id].id=id;
-let hold=0,qi=0,qt=0,stiff=0,wind=null,recov=null;const RC={dilie:.3,shuanghuan:.3,sixiang:.2,tianbeng:.4,hengsao:.3,lianzhan:.4,jian:.15,feidao:.15,qiang:.25,xuanfeng:.2,daolun:.2,jianyu:.2,huogong:.25,pili:.25,zhendi:.35,chong:.4};const WU={dilie:.7,shuanghuan:.7,sixiang:.6,tianbeng:1.0,hengsao:.6,lianzhan:.5,jian:.4,feidao:.4,qiang:.6,xuanfeng:.6,daolun:.6,jianyu:.7,huogong:.8,pili:.8,zhendi:.9,chong:1.0};let popT=0;const skipFl=[0,0,0,0,0];let loadout=['hengsao','','','',''],cds=[0,0.4,0.8,1.2,1.6];
+let hold=0,qi=0,qt=0,stiff=0,wind=null,recov=null;const RC={huima:.3,feilun:.2,xuehe:.3,wanren:.3,dilie:.3,shuanghuan:.3,sixiang:.2,tianbeng:.4,hengsao:.3,lianzhan:.4,jian:.15,feidao:.15,qiang:.25,xuanfeng:.2,daolun:.2,jianyu:.2,huogong:.25,pili:.25,zhendi:.35,chong:.4};const WU={huima:.5,feilun:.6,xuehe:.7,wanren:.8,dilie:.7,shuanghuan:.7,sixiang:.6,tianbeng:1.0,hengsao:.6,lianzhan:.5,jian:.4,feidao:.4,qiang:.6,xuanfeng:.6,daolun:.6,jianyu:.7,huogong:.8,pili:.8,zhendi:.9,chong:1.0};let popT=0;const skipFl=[0,0,0,0,0];let loadout=['hengsao','','','',''],cds=[0,0.4,0.8,1.2,1.6];
 function buildHud(){skills.innerHTML='';loadout.forEach((id,i)=>{const k=SK[id],d=document.createElement('div');d.className='slot panel'+(k?'':' empty');d.innerHTML=(k?k.g:'+')+'<s>'+(k?k.n:'')+'</s>';skills.appendChild(d);});}
 buildHud();
 function startPick(){const card=(t,d,id)=>'<button data-w="'+id+'" style="width:calc(var(--u)*230);padding:calc(var(--u)*18);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#fff;text-align:left"><div style="font-size:calc(var(--u)*30);font-weight:700">'+t+'</div><div style="font-size:calc(var(--u)*20);color:#bfae82;margin-top:6px">'+d+'</div></button>';
