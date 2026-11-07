@@ -110,12 +110,14 @@ const ts=document.getElementById('toast');function t(m){ts.textContent=m;ts.styl
 let win=false;document.getElementById('S').onclick=()=>{win=!win;F.classList.toggle('win',win);T.textContent=win?'大破黄巾':'兵败涿郡';S.textContent=win?'胜':'败';};
 document.getElementById('B').onclick=()=>t('评定：按波次、斩首、用时综合 → 校尉（样板）');
 
-(function(){const F=document.getElementById('F'),ttl=document.querySelector('.ttl'),head=F.querySelector('.head');
+(function(){try{const r=window.__RES;if(r&&r.bg){const w=r.win;document.body.style.background='linear-gradient('+(w?'rgba(60,40,8,.72),rgba(8,6,3,.88)':'rgba(70,12,10,.78),rgba(12,5,5,.9)')+'),url('+r.bg+') center/cover no-repeat fixed';}}catch(e){}
+ const F=document.getElementById('F'),ttl=document.querySelector('.ttl'),head=F.querySelector('.head');
  const rest=[...F.children].filter(e=>e!==head).concat([...head.children].filter(e=>e!==ttl));
  function run(){const fr=F.getBoundingClientRect(),r=ttl.getBoundingClientRect();if(!r.width)return;
   const dx=fr.left+fr.width/2-(r.left+r.width/2),dy=fr.top+fr.height*0.42-(r.top+r.height/2),sc=Math.min(2.6,fr.width*0.7/r.width);
   rest.forEach(e=>{e.style.transition='none';e.style.opacity=0});
+  F.style.transition='none';F.style.background='transparent';F.style.borderColor='transparent';F.style.boxShadow='none';
   ttl.style.transformOrigin='center';ttl.style.transition='none';ttl.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
-  setTimeout(()=>{ttl.style.transition='transform .7s cubic-bezier(.2,.8,.2,1)';ttl.style.transform='none';rest.forEach(e=>{e.style.transition='opacity .6s .35s';e.style.opacity=1});},1300);}
+  setTimeout(()=>{ttl.style.transition='transform .7s cubic-bezier(.2,.8,.2,1)';ttl.style.transform='none';F.style.transition='background .6s .35s,border-color .6s .35s,box-shadow .6s .35s';F.style.background='';F.style.borderColor='';F.style.boxShadow='';rest.forEach(e=>{e.style.transition='opacity .6s .35s';e.style.opacity=1});},1300);}
  run();})();
 </script></body></html>

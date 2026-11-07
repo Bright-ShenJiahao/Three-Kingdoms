@@ -118,12 +118,75 @@ const ov=document.createElement('div');ov.id='ov';
 ov.style.cssText='position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:calc(var(--u)*26);background:rgba(10,8,4,.62);z-index:8;color:#f3e7c4;text-align:center';
 stage.appendChild(ov);
 function showOv(html){ov.innerHTML=html;ov.style.display='flex';}
+// ===== 立绘占位 / 局内提示 / 随机事件 / 开场剧情（框架；真立绘放进 PORTRAIT_IMG 即可替换）=====
+const PORTRAIT_IMG={};
+const PCOL={刘备:['#2e6b4a','#d9b25a'],张飞:['#2b2b2b','#c9a24a'],关羽:['#2e5a3a','#b8362a'],张角:['#7a6a1e','#e8d27a'],乡民:['#5a4a32','#cdbb8c'],铁匠:['#4a3a32','#e07a3a'],郎中:['#3b5a5a','#c8e0d0'],老兵:['#4a4036','#b9a47a'],我:['#3a4a60','#e0d0a8']};
+function portraitSVG(who,big){const c=PCOL[who]||['#444','#ccc'],img=PORTRAIT_IMG[who];
+  if(img)return '<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;object-position:top">';
+  const ch=who.slice(-1),H=big?150:100,id='pg'+(big?'b':'s')+who;
+  const body=big?'<ellipse cx="50" cy="150" rx="52" ry="48" fill="'+c[1]+'" opacity=".55"/><circle cx="50" cy="62" r="24" fill="'+c[1]+'" opacity=".8"/><text x="50" y="72" text-anchor="middle" font-size="30" font-weight="700" fill="#14100a" opacity=".7" font-family="serif">'+ch+'</text>'
+   :'<ellipse cx="50" cy="104" rx="42" ry="36" fill="'+c[1]+'" opacity=".55"/><circle cx="50" cy="44" r="22" fill="'+c[1]+'" opacity=".8"/><text x="50" y="55" text-anchor="middle" font-size="28" font-weight="700" fill="#14100a" opacity=".7" font-family="serif">'+ch+'</text>';
+  return '<svg viewBox="0 0 100 '+H+'" preserveAspectRatio="xMidYMax slice" style="width:100%;height:100%;display:block"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c[0]+'"/><stop offset="1" stop-color="#14100a"/></linearGradient></defs><rect width="100" height="'+H+'" fill="url(#'+id+')"/>'+body+'</svg>';}
+const GOLD='#8a6a2c';
+// --- 局内提示（图3样式：右下小对话框，头像在右）---
+const tipEl=document.createElement('div');tipEl.style.cssText='position:absolute;right:calc(var(--u)*16);bottom:calc(var(--u)*150);z-index:12;display:none;width:calc(var(--u)*470);pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))';stage.appendChild(tipEl);
+let tipT=0,crowdT=0,calmT=0,_lh=0;const tipSeen={};
+function showTip(key,text,who,sec){if(key&&tipSeen[key])return;if(key)tipSeen[key]=1;who=who||'刘备';
+  tipEl.innerHTML='<div style="flex:1;background:#1c1a17;border:calc(var(--u)*3) solid '+GOLD+';border-right:0;padding:calc(var(--u)*14) calc(var(--u)*16);font-size:calc(var(--u)*20);line-height:1.5;color:#f3e7c4;display:flex;align-items:center"><div>'+text+'</div></div><div style="width:calc(var(--u)*96);height:calc(var(--u)*96);border:calc(var(--u)*3) solid '+GOLD+';overflow:hidden;position:relative;background:#000;flex:none"><div style="position:absolute;inset:0">'+portraitSVG(who,false)+'</div><div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);text-align:center;font-size:calc(var(--u)*14);color:#e8d9a8">'+who+'</div></div>';
+  tipEl.style.display='flex';tipT=sec||6;}
+// --- 对话 / 事件通用外壳 ---
+const dlg=document.createElement('div');dlg.style.cssText='position:absolute;inset:0;display:none;z-index:25;background:rgba(6,5,3,.6);color:#f3e7c4;overflow:hidden';stage.appendChild(dlg);
+function bigPortrait(who){return '<div id="dgP" style="position:absolute;left:0;bottom:0;width:calc(var(--u)*430);height:92%;overflow:hidden;-webkit-mask-image:linear-gradient(to right,#000 72%,transparent);mask-image:linear-gradient(to right,#000 72%,transparent)">'+portraitSVG(who,true)+'</div>';}
+// --- 开场剧情（图1样式：左大立绘 + 底部长对话框 + 快进）---
+function playStory(lines,done){let i=0,typing=false,tm2=null,full='';
+  const name=nm=>nm==='我'?((window.__CFG&&window.__CFG.name)||'无名'):nm;
+  const fin=()=>{clearInterval(tm2);dlg.style.display='none';dlg.onclick=null;removeEventListener('keydown',key);window.__story=null;done&&done();};
+  function show(){const L=lines[i];full=L.t.replace('{名}',name('我'));
+    dlg.innerHTML=bigPortrait(L.w)+'<div style="position:absolute;left:calc(var(--u)*14);right:calc(var(--u)*14);bottom:calc(var(--u)*14);height:calc(var(--u)*190);background:#1c1a17;border:calc(var(--u)*3) solid '+GOLD+'"><div style="position:absolute;left:calc(var(--u)*20);top:calc(var(--u)*-22);background:#2a2114;border:calc(var(--u)*3) solid '+GOLD+';padding:calc(var(--u)*4) calc(var(--u)*26);font-size:calc(var(--u)*24);font-weight:700">'+name(L.w==='我'?'我':L.w)+'</div><div id="dgT" style="padding:calc(var(--u)*34) calc(var(--u)*40);font-size:calc(var(--u)*26);line-height:1.6"></div><div style="position:absolute;right:calc(var(--u)*20);bottom:calc(var(--u)*10);font-size:calc(var(--u)*16);color:#8a7a5a">点击屏幕或按空格键继续</div><button id="dgSkip" style="position:absolute;right:calc(var(--u)*16);top:calc(var(--u)*-28);width:calc(var(--u)*64);height:calc(var(--u)*44);background:#2a2114;border:calc(var(--u)*3) solid '+GOLD+';color:#e8d9a8;font-size:calc(var(--u)*22)">⏩</button></div>';
+    $('dgSkip').onclick=e=>{e.stopPropagation();fin();};
+    let k=0;typing=true;const T=$('dgT');clearInterval(tm2);tm2=setInterval(()=>{k++;T.textContent=full.slice(0,k);if(k>=full.length){typing=false;clearInterval(tm2);}},34);}
+  function adv(){if(typing){clearInterval(tm2);typing=false;$('dgT').textContent=full;return;}i++;if(i>=lines.length)fin();else show();}
+  const key=e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv();}};
+  dlg.style.display='block';dlg.onclick=adv;addEventListener('keydown',key);window.__story={skip:fin};show();}
+// --- 随机事件（图2样式：左大立绘 + 右侧面板 + 三个选项，带得失提示）---
+const EVENTS=[
+ {id:'nongfu',w:'乡民',t:'路遇老农',d:'一位老农拦在路边，说家里的粮被黄巾抢光了，求你分一点口粮。',o:[
+   {t:'分他半袋干粮',h:'失 最大生命-6　得 伤害+4%',f(){hero.maxhp=Math.max(30,hero.maxhp-6);hero.hp=Math.min(hero.hp,hero.maxhp);allMul*=1.04;}},
+   {t:'给他指条路，自己赶路',h:'得 回复15%生命',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.15));}},
+   {t:'视而不见',h:'无事发生',f(){}}]},
+ {id:'qi',w:'老兵',t:'残破的战旗',d:'官军老兵倒在一面残旗旁，把旗杆塞进你手里：“替我，把它立起来。”',o:[
+   {t:'扛起战旗',h:'得 受到伤害-8%　失 移速-4%',f(){takeMul*=.92;spdMul*=.96;}},
+   {t:'扯下旗布裹伤',h:'得 回复25%生命',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.25));}},
+   {t:'默默离开',h:'无事发生',f(){}}]},
+ {id:'tiejiang',w:'铁匠',t:'着火的铁匠铺',d:'铁匠铺燃起大火，铁匠在抢救一炉刚打好的刀，喊你搭把手。',o:[
+   {t:'冲进去帮忙救火',h:'失 当前生命-15%　得 伤害+8%',f(){hero.hp=Math.max(1,hero.hp-Math.round(hero.maxhp*.15));allMul*=1.08;}},
+   {t:'讨一块磨刀石',h:'得 闪身冷却-8%',f(){DCD*=.92;}},
+   {t:'不管，快走',h:'无事发生',f(){}}]},
+ {id:'langzhong',w:'郎中',t:'游方郎中',d:'一个背着药箱的郎中拉住你，说他的药酒能强筋健骨，只是……药性烈。',o:[
+   {t:'买一副汤药',h:'得 回复40%生命　失 伤害-4%',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.4));allMul*=.96;}},
+   {t:'赌一碗药酒',h:'一半一半：最大生命+15，或当前生命-20%',f(){if(Math.random()<.5){hero.maxhp+=15;hero.hp+=15;}else hero.hp=Math.max(1,hero.hp-Math.round(hero.maxhp*.2));}},
+   {t:'婉拒',h:'无事发生',f(){}}]}];
+const EV_WAVES=[2,5];let evUsed={};
+function tryEvent(done){if(EV_WAVES.indexOf(wave)<0||evUsed[wave])return false;evUsed[wave]=1;
+  const pool=EVENTS.filter(e=>!evUsed[e.id]);if(!pool.length)return false;const ev=pool[Math.floor(Math.random()*pool.length)];evUsed[ev.id]=1;
+  let chosen=false;
+  dlg.innerHTML=bigPortrait(ev.w)+'<div style="position:absolute;right:calc(var(--u)*30);top:calc(var(--u)*60);width:calc(var(--u)*560);background:#14120f;border:calc(var(--u)*3) solid '+GOLD+';padding:calc(var(--u)*34) calc(var(--u)*30) calc(var(--u)*26)"><div style="position:absolute;left:50%;top:calc(var(--u)*-26);transform:translateX(-50%);background:#2a2114;border:calc(var(--u)*3) solid '+GOLD+';padding:calc(var(--u)*4) calc(var(--u)*34);font-size:calc(var(--u)*26);font-weight:700;white-space:nowrap">'+ev.t+'</div><div style="font-size:calc(var(--u)*22);line-height:1.6;margin-bottom:calc(var(--u)*22)">'+ev.d+'</div><div id="evO"></div><div id="evR" style="margin-top:calc(var(--u)*10);min-height:calc(var(--u)*26);font-size:calc(var(--u)*20);color:#9fe08a;text-align:center"></div></div>';
+  dlg.style.display='block';dlg.onclick=null;
+  const box=$('evO');ev.o.forEach((o,k)=>{const b=document.createElement('button');b.style.cssText='display:block;width:100%;margin-bottom:calc(var(--u)*12);padding:calc(var(--u)*10) calc(var(--u)*12);background:#241d12;border:calc(var(--u)*2) solid #6b5426;color:#f3e7c4;text-align:center';
+    b.innerHTML='<div style="font-size:calc(var(--u)*24)">'+(k+1)+'　'+o.t+'</div><div style="font-size:calc(var(--u)*16);color:#bfae82;margin-top:calc(var(--u)*4)">'+o.h+'</div>';
+    b.onmouseenter=()=>{b.style.background='#5a4214';b.style.borderColor='#d9b25a'};b.onmouseleave=()=>{b.style.background='#241d12';b.style.borderColor='#6b5426'};
+    b.onclick=()=>pick(k);box.appendChild(b);});
+  function pick(k){if(chosen)return;chosen=true;ev.o[k].f();removeEventListener('keydown',kk);$('evR').textContent=ev.o[k].h==='无事发生'?'你没有多做停留。':ev.o[k].h;setTimeout(()=>{dlg.style.display='none';done();},1100);}
+  const kk=e=>{const n={Digit1:0,Digit2:1,Digit3:2}[e.code];if(n!=null&&n<ev.o.length)pick(n);};addEventListener('keydown',kk);
+  window.__event={pick};return true;}
+
 function pickPool(){const have=loadout.filter(x=>x);const c=SKID.filter(id=>have.indexOf(id)<0).map(id=>({id,w:FACOF[id]===fac&&fac&&fac!=='xiangyong'?4:1.5}));const r=[];while(r.length<3&&c.length){let t=c.reduce((a,b)=>a+b.w,0),x=Math.random()*t,k=0;for(;k<c.length-1;k++){x-=c[k].w;if(x<=0)break;}r.push(c[k].id);c.splice(k,1);}return r;}
 function endWave(){
   if(paused||over)return;paused=true;
   const opts=pickPool();
   const card=id=>'<button data-s="'+id+'" style="width:calc(var(--u)*210);padding:calc(var(--u)*16);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4;text-align:center"><div style="font-size:calc(var(--u)*40)">'+SK[id].g+'</div><div style="font-size:calc(var(--u)*28);font-weight:700">'+SK[id].n+'</div><div style="font-size:calc(var(--u)*18);color:#bfae82;margin-top:4px">'+(CAT[id]||'')+(FACOF[id]?' · '+FAC[FACOF[id]].n:' · 通用')+'</div></button>';
-  const next=()=>{hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(30*healMul));wave++;waveT=0;paused=false;ov.style.display='none';};
+  const doNext=()=>{hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(30*healMul));wave++;waveT=0;paused=false;ov.style.display='none';};
+  const next=()=>{ov.style.display='none';if(!tryEvent(doNext))doNext();};
   const main=()=>{showOv('<div style="font-size:calc(var(--u)*46);font-weight:700">第 '+wave+' 波结束</div><div style="font-size:calc(var(--u)*22);color:#bfae82">择一门武艺（'+(FAC[fac]&&fac!=='xiangyong'?FAC[fac].n+'技能更常见':'随机')+'）</div><div style="display:flex;gap:calc(var(--u)*16);flex-wrap:wrap;justify-content:center">'+opts.map(card).join('')+'</div><button id="nextW" style="'+BTN+';opacity:.8">跳过，下一波</button>');
     $('nextW').onclick=next;
     ov.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const id=b.dataset.s,e=loadout.indexOf('');
@@ -135,7 +198,8 @@ function endWave(){
 const BTN='font-size:calc(var(--u)*32);padding:calc(var(--u)*12) calc(var(--u)*40);border-radius:10px;border:2px solid #d9b25a;background:#6b4a14;color:#fff';
 function startBoss(){bossPhase=true;enemies.length=0;spawn('brute');floatTxt('张角出场','#ff9a6a');}
 function endReport(win){const dm=Object.keys(dmgSt).map(id=>({id,g:SK[id]?SK[id].g:'?',n:SK[id]?SK[id].n:id,v:dmgSt[id]})).sort((x,y)=>y.v-x.v);
-  return {t:'end',win,kills,time:Math.floor(tclock),wave:Math.min(wave,WAVES),waves:WAVES,combo:comboMax,hp:Math.ceil(hero.hp),dmg:dm,loadout:loadout.map(id=>SK[id]?SK[id].g:''),cat:mainCat,fac,facs:[...new Set(loadout.map(x=>FACOF[x]).filter(Boolean))],stats:{kills,pd:pdCnt,hits:hitsTaken,hitsW4,bruteK,archK,win},...calcGrade(win)};}
+  let bg='';try{bg=cv.toDataURL('image/jpeg',0.55);}catch(e){}
+  return {t:'end',bg,win,kills,time:Math.floor(tclock),wave:Math.min(wave,WAVES),waves:WAVES,combo:comboMax,hp:Math.ceil(hero.hp),dmg:dm,loadout:loadout.map(id=>SK[id]?SK[id].g:''),cat:mainCat,fac,facs:[...new Set(loadout.map(x=>FACOF[x]).filter(Boolean))],stats:{kills,pd:pdCnt,hits:hitsTaken,hitsW4,bruteK,archK,win},...calcGrade(win)};}
 function heroWin(){won=true;over=true;if(parent!==window){parent.postMessage(endReport(true),'*');return;}showOv('<div style="font-size:calc(var(--u)*52);font-weight:700;color:#f0c24a">大破黄巾</div><div style="font-size:calc(var(--u)*26)">击倒 '+kills+'　剩余血量 '+Math.ceil(hero.hp)+'</div><button id="again" style="'+BTN+'">再来一局</button>');$('again').onclick=()=>location.reload();}
 
 function ringR(){const kk=cv.height/VH;const vw=cv.width/kk;return Math.hypot(vw/2,VH/2)+50;}
@@ -307,7 +371,7 @@ function syncSel(){document.querySelectorAll('#panel select').forEach((sel,i)=>{
  p.insertBefore(h,p.firstChild);})();
 (function(){const C=window.__CFG;const O=[['短兵',['hengsao','lianzhan','','','']],['射艺',['jianyu','feidao','','','']],['长兵',['qiang','','','','']],['长兵',['qiang','','','','']],['道术',['huogong','','','','']]];
   if(C&&C.title){titleId=C.title;applyTitle(C.title);}applyFac((C&&C.faction)||'xiangyong');
-  if(C&&C.o!=null){const o=O[C.o]||O[0];mainCat=o[0];for(let i=0;i<5;i++){loadout[i]=o[1][i];cds[i]=0.2*i;}buildHud();syncSel();started=true;paused=false;}else startPick();})();
+  if(C&&C.o!=null){const o=O[C.o]||O[0];mainCat=o[0];for(let i=0;i<5;i++){loadout[i]=o[1][i];cds[i]=0.2*i;}buildHud();syncSel();started=true;paused=true;playStory([{w:'刘备',t:'中平元年，黄巾起于钜鹿，烽火已烧到涿郡城下。'},{w:'刘备',t:'{名}，你虽是乡野农夫，却肯在此时拿起刀，备心中有数。'},{w:'张飞',t:'大哥说得对！这些戴黄头巾的杂碎，先让俺老张看看你的刀快不快！'},{w:'刘备',t:'活下来，撑到鸣金收兵。八波之后，那张角自会现身。'}],()=>{paused=false;});}else startPick();})();
 (function(){const b=document.createElement('button');b.textContent='退';b.title='弃战退出';b.style.cssText='position:absolute;left:calc(var(--u)*8);top:calc(var(--u)*64);z-index:7;width:calc(var(--u)*44);height:calc(var(--u)*44);border-radius:50%;border:1px solid #6b5a8a;background:rgba(20,14,30,.6);color:#bfae82;font-size:calc(var(--u)*20);opacity:.7';
  b.onclick=()=>{if(over)return;if(!b._c){b._c=1;b.textContent='确';b.style.width='auto';b.style.padding='0 10px';b.title=kills===0?'再点一次：弃甲而逃，投奔黄巾':'再点一次：弃战，计为败';setTimeout(()=>{b._c=0;b.textContent='退';b.style.padding='';b.style.width='calc(var(--u)*44)'},2500);return;}over=true;const r=endReport(false);r.deserter=kills===0;if(parent!==window){parent.postMessage(r,'*');}else location.reload();};
  stage.appendChild(b);})();
@@ -401,7 +465,7 @@ function update(dt){
   const tn=targetN();if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){for(let k=0;k<3&&cnt<tn;k++,cnt++)spawn(pickType());}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,8+Math.floor(Math.random()*8));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
-    statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
+    statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}if(tipT>0){tipT-=dt;if(tipT<=0)tipEl.style.display='none';}if(hitsTaken!==_lh){_lh=hitsTaken;calmT=0;}else calmT+=dt;if(!tipSeen.crowd){if(nearest(8,45).length>=6)crowdT+=dt;else crowdT=0;if(crowdT>2.5&&calmT>3)showTip('crowd','被围住也不用慌：不会被所有人同时打，<b style="color:#ffd86a">只有抬手出招的敌人才伤你</b>。','刘备',7);}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
   if(!bossPhase&&retreatT<=0&&(wave===4||wave===7)&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
@@ -519,5 +583,5 @@ const errBox=document.createElement('div');errBox.style.cssText='position:fixed;
 function loop(now){requestAnimationFrame(loop);const dt=Math.max(0,Math.min(0.05,(now-last)/1000));last=now;try{update(dt);draw();}catch(e){errBox.style.display='block';errBox.textContent='出错：'+(e&&e.stack||e);}}
 requestAnimationFrame(loop);
 window.addEventListener('error',e=>{errBox.style.display='block';errBox.textContent='页面错误：'+e.message;});
-window.__gb={hero,enemies,setPhone:()=>$('vPhone').click(),setS:v=>{S=v;$('sS').value=v;},setN:v=>{setN(v);$('sN').value=v;},endWave,skip:t=>{tclock=t;},setW:t=>{waveT=t;},setWave:n=>{wave=n;}};
+window.__gb={hero,enemies,setPhone:()=>$('vPhone').click(),setS:v=>{S=v;$('sS').value=v;},setN:v=>{setN(v);$('sN').value=v;},endWave,showTip,die:()=>heroDie(),skip:t=>{tclock=t;},setW:t=>{waveT=t;},setWave:n=>{wave=n;}};
 })();
