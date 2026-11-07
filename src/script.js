@@ -91,7 +91,7 @@ const stage=$('stage'),cv=$('cv'),ctx=cv.getContext('2d');
 let SQ=0.7,S=1,N=250,phoneSim=false,DPR=1,paused=true,over=false;
 const hero={x:0,y:0,fa:0,wk:0,moving:false,hp:120,maxhp:120};let hurtT=0,ampT=0,atkMul=1;const texts=[];let DCD=0.9;let titleId='',statusT=0,statusKey='';let cbT=0,rgT=0,cbOn=false,rgOn=false,healMul=1,fac='';let spdMul=1,takeMul=1,crowdMul=false,bigMul=1,smallMul=1,rangedMul=1,meleeMul=1,allMul=1;let stopT=0,shk=0;const dnums=[];let pdCnt=0,hitsTaken=0,hitsW4=0,bruteK=0,archK=0;
 const enemies=[],effects=[],slashes=[],ghosts=[],corpses=[];let dashCd=0;
-let silver=0,waveK0=0,waveH0=0,dmgSt={},comboMax=0,retreatT=0,bossPhase=false,won=false,started=false,kills=0,combo=0,comboT=0,slashT=0,skillIdx=0,tm=0,tclock=0,waveT=0,bossDone=false;
+const RT=2.4;let silver=0,waveK0=0,waveH0=0,dmgSt={},comboMax=0,retreatT=0,bossPhase=false,won=false,started=false,kills=0,combo=0,comboT=0,slashT=0,skillIdx=0,tm=0,tclock=0,waveT=0,bossDone=false;
 const keys={};
 addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();tryDash();return;}keys[e.key.toLowerCase()]=true;});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
@@ -446,7 +446,7 @@ function update(dt){
   for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(!isFinite(e.x)||!isFinite(e.y)||!isFinite(e.wk)){enemies.splice(i,1);}}
   for(const e of enemies){
     const T=TYPES[e.type];let dx=hero.x-e.x,dy=(hero.y-e.y)*SQ;const d=Math.hypot(dx,dy)||1;
-    if(retreatT>0){e.atk=null;e.x-=dx/d*300*dt;e.y-=dy/d*300*dt/SQ;continue;}
+    if(retreatT>0){e.atk=null;continue;}
     if(e.hitT>0)e.hitT-=dt;if(e.flashT>0)e.flashT-=dt;if(e.strikeT>0)e.strikeT-=dt;
     e.acd=(e.acd==null?Math.random()*1.2:e.acd)-dt;
     if(e.atk){e.atk.t+=dt;if(e.atk.t>=e.atk.dur){resolveAtk(e,T);e.atk=null;e.strikeT=0.22;e.acd=T.ac;}continue;}
@@ -497,7 +497,7 @@ function update(dt){
   if(!bossPhase&&retreatT<=0&&waveRow().gen&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
-  else if(waveT>=WAVE_TIME){retreatT=1.4;}
+  else if(waveT>=WAVE_TIME){retreatT=RT;}
 }
 
 let kk=1;
@@ -520,12 +520,12 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   const nm=T.art,C=META[nm],[dn,fl]=H8[sect(fa)],di=C.dirs.indexOf(dn),fi=Math.floor(wk)%T.nf,F=C.frames[di][fi],im=IMG[nm+'_'+dn+fi];
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
-function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;
-  if(T.art){const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;drawArt(T,e.x,ey,e.fa,e.atk?0:e.wk,T.sc*S,blink?0.55:null,e.flashT>0,0);return;}
+function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;const fd=retreatT>0?Math.max(.02,retreatT/RT):1;
+  if(T.art){const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;drawArt(T,e.x,ey,e.fa,e.atk?0:e.wk,T.sc*S,(blink||fd<1)?(blink?.55:1)*fd:null,e.flashT>0,0);return;}
   const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let nm;
   if(e.atk)nm='raise_'+di;else if(e.strikeT>0)nm='strike_'+di;else if(e.hitT>0)nm='hit_'+di;else nm='walk_'+di+'_'+(Math.floor(Math.abs(e.wk))%6);
   const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;
-  drawEA(nm,e.x,ey,T.sc*S,fl,blink?0.55:null,e.flashT>0);}
+  drawEA(nm,e.x,ey,T.sc*S,fl,(blink||fd<1)?(blink?.55:1)*fd:null,e.flashT>0);}
 const AT=META.atlas,AK=0.168,ATN={};AT.names.forEach((n,i)=>ATN[n]=i);
 function drawHero(x,y,fa,wk,sc,alpha,pose){
   if(!isFinite(fa))fa=0;if(!isFinite(wk))wk=0;
@@ -593,7 +593,7 @@ function draw(){
   for(const p of slashes)drawCrescent(p);
   for(const f of fxs)f.drw&&f.drw(f.t);
   for(const p of arrows){ctx.save();ctx.strokeStyle='#f6e6b0';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(p.x,p.y*SQ-18*S);ctx.lineTo(p.x+p.dx*14*S,p.y*SQ-18*S+p.dy*14*S);ctx.stroke();ctx.restore();}
-  if(retreatT>0){ctx.save();ctx.setTransform(1,0,0,1,0,0);const cw=cv.width,ch=cv.height,al=Math.min(1,retreatT/0.4,(1.4-retreatT)/0.2);ctx.globalAlpha=al;ctx.font='bold '+(ch*0.12)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=ch*0.012;ctx.strokeStyle='#000';ctx.fillStyle='#ffd86a';ctx.strokeText('鸣金收兵',cw/2,ch*0.38);ctx.fillText('鸣金收兵',cw/2,ch*0.38);ctx.restore();}
+  if(retreatT>0){ctx.save();ctx.setTransform(1,0,0,1,0,0);const cw=cv.width,ch=cv.height,al=Math.min(1,retreatT/0.4,(RT-retreatT)/0.2);ctx.globalAlpha=al;ctx.font='bold '+(ch*0.12)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=ch*0.012;ctx.strokeStyle='#000';ctx.fillStyle='#ffd86a';ctx.strokeText('鸣金收兵',cw/2,ch*0.38);ctx.fillText('鸣金收兵',cw/2,ch*0.38);ctx.restore();}
   for(const n of dnums){const k=n.t/0.7;ctx.save();ctx.globalAlpha=Math.min(1,(1-k)*1.6);ctx.font='bold '+((n.crit?19:13)*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=n.crit?'#ffb030':'#fff';const ty=n.y*SQ-34*S-k*26*S-(n.crit?Math.sin(Math.min(1,k*3)*Math.PI)*8:0);ctx.strokeText(n.v,n.x,ty);ctx.fillText(n.v,n.x,ty);ctx.restore();}
   for(const t of texts){ctx.save();ctx.globalAlpha=Math.max(0,1-t.t);ctx.font='bold '+(16*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=t.c;const ty=t.y*SQ-60*S-t.t*28;ctx.strokeText(t.s,t.x,ty);ctx.fillText(t.s,t.x,ty);ctx.restore();}
   {const bi=$('bars').querySelector('i'),bb=$('bars').querySelector('b');bi.style.width=(hero.hp/hero.maxhp*100)+'%';bb.textContent=Math.ceil(hero.hp)+' / '+hero.maxhp;}

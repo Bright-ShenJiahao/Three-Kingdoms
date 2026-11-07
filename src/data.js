@@ -1,14 +1,14 @@
 // ===== 数据表：改数值只改这里，不用碰 script.js =====
 // 敌人类型
 const TYPES={
- spara:{w:70,sp:52,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:.5,dmg:4,ac:1.6,ring:0,mk:null},
- archer:{w:20,sp:40,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:.8,dmg:5,ac:2.8,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
- pers:{w:15,sp:58,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:.5,dmg:5,ac:1.6,ring:0,mk:null},
- pcav:{w:8,sp:95,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:.45,dmg:8,ac:2.0,ring:0,kbm:.5,mk:null},
- comp:{w:6,sp:82,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:.5,dmg:10,ac:2.2,ring:0,kbm:.4,mk:null},
- immortal:{w:22,sp:36,r:12,hp:6,nm:'immortal',art:'immortal',nf:6,sc:1.1,reach:30,ar:34,aw:.6,dmg:6,ac:2.0,ring:0,kbm:.3,mk:'#6ab4ff'},
- brute2:{w:5,sp:26,r:18,hp:20,nm:'immortal',sc:1.5,reach:64,ar:70,aw:1.0,dmg:14,ac:2.6,ring:1,kbm:.4,mk:'#ff5a4a'},
- brute:{boss:1,sp:28,r:20,hp:30,nm:'immortal',sc:1.7,reach:52,ar:74,aw:.9,dmg:16,ac:2.4,ring:1}
+ spara:{w:70,sp:68,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:0.33,dmg:4,ac:1.12,ring:0,mk:null},
+ archer:{w:20,sp:52,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:0.52,dmg:5,ac:1.96,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
+ pers:{w:15,sp:75,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:0.33,dmg:5,ac:1.12,ring:0,mk:null},
+ pcav:{w:8,sp:124,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:0.29,dmg:8,ac:1.4,ring:0,kbm:.5,mk:null},
+ comp:{w:6,sp:107,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:0.33,dmg:10,ac:1.54,ring:0,kbm:.4,mk:null},
+ immortal:{w:22,sp:47,r:12,hp:6,nm:'immortal',art:'immortal',nf:6,sc:1.1,reach:30,ar:34,aw:0.39,dmg:6,ac:1.4,ring:0,kbm:.3,mk:'#6ab4ff'},
+ brute2:{w:5,sp:34,r:18,hp:20,nm:'immortal',sc:1.5,reach:64,ar:70,aw:0.65,dmg:14,ac:1.82,ring:1,kbm:.4,mk:'#ff5a4a'},
+ brute:{boss:1,sp:36,r:20,hp:30,nm:'immortal',sc:1.7,reach:52,ar:74,aw:0.59,dmg:16,ac:1.68,ring:1}
 };
 
 // 每一波一行：n=目标同屏数  mix=刷怪权重  b2=重甲兵上限(0=不出)  gen=该波后段出敌将  ev=波后触发随机事件
