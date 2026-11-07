@@ -520,8 +520,8 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   const nm=T.art,C=META[nm],[dn,fl]=H8[sect(fa)],di=C.dirs.indexOf(dn),fi=Math.floor(wk)%T.nf,F=C.frames[di][fi],im=IMG[nm+'_'+dn+fi];
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
-const HJ=META.hj,HK=0.4;const hjc=document.createElement('canvas');hjc.width=hjc.height=HJ.cell;const hjx=hjc.getContext('2d');
-function drawHJ(col,row,x,y,sc,mir,alpha,flash,red,lean){const cw=HJ.cell;ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);if(lean)ctx.rotate(lean);
+const HJ=META.hj,HK=1;const hjc=document.createElement('canvas');hjc.width=hjc.height=HJ.cell;const hjx=hjc.getContext('2d');
+function drawHJ(col,row,x,y,sc,mir,alpha,flash,red,lean){const cw=HJ.cell;ctx.save();ctx.imageSmoothingEnabled=false;if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);if(lean)ctx.rotate(lean);
   let src=IMG.hj_atlas,a=col*cw,b=row*cw;
   if(flash||red){hjx.clearRect(0,0,cw,cw);hjx.globalCompositeOperation='source-over';hjx.drawImage(IMG.hj_atlas,a,b,cw,cw,0,0,cw,cw);hjx.globalCompositeOperation='source-atop';hjx.fillStyle=flash?'rgba(255,255,255,.85)':'rgba(255,40,30,'+red+')';hjx.fillRect(0,0,cw,cw);src=hjc;a=0;b=0;}
   ctx.drawImage(src,a,b,cw,cw,-cw/2*HK*sc,-HJ.base*HK*sc,cw*HK*sc,cw*HK*sc);ctx.restore();}

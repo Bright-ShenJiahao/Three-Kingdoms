@@ -53,9 +53,19 @@ p=rows[5][0];sl=p[1];pm=(lab[sl]==p[0])&fg[sl]
 sub=a[sl].copy();sub[...,1]=np.minimum(sub[...,1],np.maximum(sub[...,0],sub[...,2])+8)
 rg=np.zeros(pm.shape+(4,),np.uint8);rg[...,:3]=np.clip(sub,0,255);rg[...,3]=pm*255
 Image.fromarray(rg).save('portrait.png')
-atlas.save('hj_atlas.png')
-q=atlas.quantize(colors=128,method=Image.FASTOCTREE,dither=Image.NONE)
+K=0.5
+sm=atlas.resize((round(atlas.width*K),round(atlas.height*K)),Image.LANCZOS)
+arr=np.array(sm);al=arr[...,3]>128
+arr[...,3]=al*255;arr[~al,:3]=0
+# 1px dark outline
+ring=ndi.binary_dilation(al,structure=np.ones((3,3),bool))&~al
+arr[ring]=[22,14,8,255]
+sm=Image.fromarray(arr)
+atlas=sm
+q=atlas.quantize(colors=96,method=Image.FASTOCTREE,dither=Image.NONE)
 q.save('hj_atlas_q.png',optimize=True)
+atlas.save('hj_atlas.png')
+CELL=round(CELL*K);BASE=round(BASE*K)
 json.dump({'cell':CELL,'base':BASE,'cols':COLS,'rows':5,'dirs':['E','SE','S','NE','N'],'acts':{'run':[0,8],'wind':[8,10],'strike':[10,12],'hit':[12,13],'die':[13,16]}},open('hj_atlas.json','w'))
 bg2=Image.new('RGBA',atlas.size,(70,100,70,255));bg2.alpha_composite(atlas);bg2.convert('RGB').save('/tmp/hj/prev.png')
 print('ok',atlas.size)
