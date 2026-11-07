@@ -13,15 +13,29 @@ const TYPES={
 
 // 每一波一行：n=目标同屏数  mix=刷怪权重  b2=重甲兵上限(0=不出)  gen=该波后段出敌将  ev=波后触发随机事件
 const WAVE_TABLE=[
- {n:74, mix:{spara:100,pers:12,pcav:5}, b2:0},
- {n:88, mix:{spara:80,archer:20,pers:12,pcav:7,comp:4}, b2:0, ev:1},
- {n:102,mix:{spara:60,archer:20,immortal:20,pers:12,pcav:7,comp:4}, b2:0},
- {n:116,mix:{spara:50,archer:20,immortal:20,pers:12,pcav:7,comp:4}, b2:1, gen:1},
- {n:130,mix:{spara:40,archer:25,immortal:25,pers:15,pcav:7,comp:4}, b2:1, ev:1},
- {n:144,mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:2},
- {n:158,mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:2, gen:1},
- {n:172,mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3}
+ {n:50, mix:{spara:100,pers:6}, b2:0},
+ {n:60, mix:{spara:90,archer:10,pers:8}, b2:0, ev:1},
+ {n:74, mix:{spara:70,archer:15,pers:12,immortal:10,pcav:4}, b2:0},
+ {n:86, mix:{spara:60,archer:20,immortal:15,pers:12,pcav:5,comp:3}, b2:0, ev:1},
+ {n:98, mix:{spara:55,archer:20,immortal:18,pers:12,pcav:5,comp:3}, b2:0, gen:1},
+ {n:108, mix:{spara:50,archer:20,immortal:20,pers:12,pcav:6,comp:4}, b2:1},
+ {n:116, mix:{spara:50,archer:20,immortal:20,pers:12,pcav:6,comp:4}, b2:1, ev:1},
+ {n:124, mix:{spara:45,archer:22,immortal:22,pers:14,pcav:7,comp:4}, b2:1},
+ {n:132, mix:{spara:45,archer:22,immortal:22,pers:14,pcav:7,comp:4}, b2:2, ev:1},
+ {n:80, mix:{spara:40,archer:15,immortal:15,pers:10,pcav:6,comp:4}, b2:1, boss:1},
+ {n:140, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:8,comp:5}, b2:2},
+ {n:148, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:8,comp:5}, b2:2, ev:1,gen:1},
+ {n:156, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3},
+ {n:90, mix:{spara:40,archer:20,immortal:20,pers:12,pcav:8,comp:5}, b2:2, boss:1},
+ {n:164, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3, ev:1},
+ {n:172, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3, gen:1},
+ {n:90, mix:{spara:40,archer:20,immortal:20,pers:12,pcav:8,comp:5}, b2:2, boss:1},
+ {n:180, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3, ev:1},
+ {n:190, mix:{spara:40,archer:25,immortal:25,pers:15,pcav:10,comp:6}, b2:3, gen:1},
 ];
+// 每波时长（秒），对照《群侠幸存者新手指引书》；第20波为终局首领
+const WAVE_T=[22,26,34,38,42,45,48,52,55,70,60,65,70,60,60,60,90,60,75,180];
+
 // 势力：fx 为声明式效果（maxhp/spd/take/all/dcd/ranged/melee/heal=乘数；cb/rg=开关）
 const FAC={xiangyong:{n:'普通乡勇',up:'无',dn:'无'},
  guanjun:{n:'官军',up:'最大生命+15%',dn:'移速-8%',cond:'携官军技能（枪刺/震地）通关',tags:['qiang','zhendi'],fx:{maxhp:1.15,spd:.92}},

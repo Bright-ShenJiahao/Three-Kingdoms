@@ -1,7 +1,7 @@
 const ASSETS = __ASSETS__;
 (async function(){
 let VH=640;                 // 视野高度（世界单位）；步兵 32 高 → 约占屏高 1/20
-const WAVES=8, WAVE_TIME=60;
+const WAVES=20;function WT(){return WAVE_T[Math.min(wave,WAVES)-1]||60;}
 /*__DATA__*/
 /*__BGM__*/
 let wave=1;
@@ -227,7 +227,7 @@ function heroWin(){won=true;over=true;if(parent!==window){parent.postMessage(end
 
 function ringR(){const kk=cv.height/VH;const vw=cv.width/kk;return Math.hypot(vw/2,VH/2)+50;}
 let edgeO=0,edgeAng=0,batchT=0,offT=0,moraleMul=1,gs=1,genDone={},offMsg=false;
-function bndR(){const kk=cv.height/VH,vw=cv.width/kk;return Math.max(520,vw*1.2)*(1-0.05*Math.max(0,Math.min(wave,WAVES)-1))*gs;}
+function bndR(){const kk=cv.height/VH,vw=cv.width/kk;return Math.max(520,vw*1.2)*(1-0.019*Math.max(0,Math.min(wave,WAVES)-1))*gs;}
 function spawn(type,rad,ang){
   if(ang==null&&Math.random()<0.6){const base=edgeO>0.05?edgeAng:(hero.moving?hero.fa:Math.random()*6.283);ang=base+(Math.random()-0.5)*2.4;}
   const a=ang==null?Math.random()*6.283:ang,r=rad==null?ringR()+Math.random()*60:rad;
@@ -528,10 +528,12 @@ function update(dt){
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
     statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}if(tipT>0){tipT-=dt;if(tipT<=0)tipEl.style.display='none';}if(hitsTaken!==_lh){_lh=hitsTaken;calmT=0;}else calmT+=dt;if(!tipSeen.crowd){if(nearest(8,45).length>=6)crowdT+=dt;else crowdT=0;if(crowdT>2.5&&calmT>3)showTip('crowd','被围住也不用慌：不会被所有人同时打，<b style="color:#ffd86a">只有抬手出招的敌人才伤你</b>。','刘备',7);}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
-  if(!bossPhase&&retreatT<=0&&waveRow().gen&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
+  if(!bossPhase&&started&&wave>=WAVES&&retreatT<=0)startBoss();
+  if(!bossPhase&&retreatT<=0&&waveRow().boss&&waveT>=1&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('首领出阵','#ff5a4a');}
+  if(!bossPhase&&retreatT<=0&&waveRow().gen&&waveT>=WT()*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
-  else if(waveT>=WAVE_TIME){retreatT=RT;}
+  else if(waveT>=WT()){retreatT=RT;}
 }
 
 let kk=1;
@@ -636,7 +638,7 @@ function draw(){
   $('info').textContent='窗口 '+stage.clientWidth+'×'+stage.clientHeight+'\n视野 '+Math.round(vw)+'×'+Math.round(vwy)+'（世界单位）\n步兵占屏高 1/'+(VH/(32*S)).toFixed(1)+'；步行主角 1/'+(VH/(48*S)).toFixed(1)+'\n压扁 '+SQ.toFixed(2)+'  敌人 '+enemies.length+'  地块 '+chunks.size;
   $('vS').textContent=S.toFixed(2);$('vQ').textContent=SQ.toFixed(2);dashBtn.style.setProperty('--p',((1-dashCd/DCD)*360)+'deg');dashBtn.classList.toggle('rdy',dashCd<=0);
   $('koN').textContent=kills;$('cbN').textContent=combo;
-  const wl=Math.max(0,WAVE_TIME-waveT);
+  const wl=Math.max(0,WT()-waveT);
   $('timer').textContent=bossPhase?'首领：张角':'第'+wave+'/'+WAVES+'波 '+String(Math.ceil(wl)).padStart(2,'0')+'s';
   [...skills.children].forEach((d,i)=>{const k=SK[loadout[i]];d.classList.toggle('on',i===qi);d.style.opacity=skipFl[i]>0?0.3:(k&&cds[i]>0?0.6:'');});
 }
