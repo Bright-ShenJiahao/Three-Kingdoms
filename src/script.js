@@ -529,7 +529,7 @@ function drawEnemyHJ(e,T,ey,fd){const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn
   if(e.atk){const k=e.atk.t/e.atk.dur;col=k<0.5?6:7;if(k>0.55)red=Math.min(.45,(k-.55)*1.2);}
   else if(e.strikeT>0)col=e.strikeT>0.11?8:9;
   else if(e.hitT>0)col=10;
-  else{const w=Math.floor(Math.abs(e.wk)*0.8)%6;col=w;yo=(w%3===2?-3:0)*T.sc*S;}
+  else{const w=Math.floor(Math.abs(e.wk)*0.55)%6;col=w;}
   drawEA_HJ(col,di,e.x,ey+yo,T.sc*S,fl<0,fd<1?fd:null,e.flashT>0,red);}
 function drawEA_HJ(c,r,x,y,sc,m,al,f,red){drawHJ(c,r,x,y,sc,m,al,f,red);}
 function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;const fd=retreatT>0?Math.max(.02,retreatT/RT):1;

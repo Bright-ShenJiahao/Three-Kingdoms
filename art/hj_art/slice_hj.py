@@ -26,6 +26,7 @@ for r in range(5):
     # merge sword fragment (index 12) into frame 11
     groups=[[c] for c in row[:11]]+[[row[11],row[12]]]+[[row[13]],[row[14]]]
     assert len(groups)==14
+    RG=max(c[1][0].stop for g in groups[:11] for c in g)
     for k,g in enumerate(groups):
         y0=min(c[1][0].start for c in g);y1=max(c[1][0].stop for c in g);x0=min(c[1][1].start for c in g);x1=max(c[1][1].stop for c in g)
         pad=3;y0=max(0,y0-pad);x0=max(0,x0-pad);y1=min(a.shape[0],y1+pad);x1=min(a.shape[1],x1+pad)
@@ -44,6 +45,7 @@ for r in range(5):
         sub[...,1]=np.minimum(sub[...,1],mx)
         rgba=np.zeros(m.shape+(4,),np.uint8);rgba[...,:3]=np.clip(sub,0,255);rgba[...,3]=m*255
         t=Image.fromarray(rgba)
+        if k<=10: fy=RG-y0
         ox=round(CELL/2-cx);oy=round(BASE-fy)
         assert ox>=0 and oy>=0 and ox+t.width<=CELL and oy+t.height<=CELL,(r,k,ox,oy,t.size)
         atlas.alpha_composite(t,(k*CELL+ox,r*CELL+oy))
