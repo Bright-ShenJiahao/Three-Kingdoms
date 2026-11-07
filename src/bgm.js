@@ -1,94 +1,86 @@
-// ===== 战场配乐（全程序合成，原创旋律；风格取意：战鼓+胡笳/二胡+古筝+杀声）=====
-// makeBGM(ctx, dest, noiseBuf) → {start,stop,setLevel,boss,gong,duck,tickOffline}
-function makeBGM(A,dest,NBUF){
-  const BPM=112,S16=60/BPM/4;           // 16分音符时长
-  const master=A.createGain();master.gain.value=.9;master.connect(dest);
-  const comp=A.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(master);
-  const bus=A.createGain();bus.gain.value=1;bus.connect(comp);
-  // 简单混响（噪声衰减卷积），营造旷野回响
-  const rv=A.createConvolver();{const n=A.sampleRate*1.0,b=A.createBuffer(2,n,A.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.6);}rv.buffer=b;}
-  const rvg=A.createGain();rvg.gain.value=.07;rv.connect(rvg);rvg.connect(comp);
-  const send=A.createGain();send.gain.value=1;send.connect(rv);
-  const hz=n=>440*Math.pow(2,(n-69)/12);
-  // 调式：D 宫调五声 D E F# A B（大调，昂扬）
-  const PEN=[0,2,4,7,9];
-  const deg=(d,oct)=>50+oct*12+PEN[((d%5)+5)%5]+12*Math.floor(d/5);   // d=0 → A3(57)
-  function env(g,t,a,d,pk,end){g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(pk,t+a);g.gain.exponentialRampToValueAtTime(Math.max(0.0001,end||0.0001),t+a+d);}
-  function noise(t,dur,type,f,q,vol,wet){const s=A.createBufferSource();s.buffer=NBUF;s.loop=true;const fl=A.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=A.createGain();env(g,t,.004,dur,vol);s.connect(fl);fl.connect(g);g.connect(bus);if(wet){const w=A.createGain();w.gain.value=wet;g.connect(w);w.connect(send);}s.start(t,Math.random()*.3);s.stop(t+dur+.05);}
-  // 战鼓：低频正弦下扫 + 皮面噪声
-  function taiko(t,vol,pitch){const o=A.createOscillator(),g=A.createGain();o.type='sine';const f=pitch||78;o.frequency.setValueAtTime(f*1.9,t);o.frequency.exponentialRampToValueAtTime(f*.55,t+.22);env(g,t,.003,.5,vol,.0005);o.connect(g);g.connect(bus);const w=A.createGain();w.gain.value=.5;g.connect(w);w.connect(send);o.start(t);o.stop(t+.6);noise(t,.07,'bandpass',900,.8,vol*.35,0);}
-  function bangzi(t,vol){noise(t,.05,'bandpass',2600,3,vol,0);const o=A.createOscillator(),g=A.createGain();o.type='square';o.frequency.value=1250;env(g,t,.001,.03,vol*.18);o.connect(g);g.connect(bus);o.start(t);o.stop(t+.06);}
+// ===== 战场配乐：移植自《无名之辈》第二章《旌旗北望》（羽调五声 A C D E G，112 BPM，32 小节循环）=====
+// 鼓为真实大鼓采样（__DRUM__ 由 build.py 内嵌 base64），其余乐器 Web Audio 合成。无喊杀声。
+// makeBGM(ctx,dest,noiseBuf) → {start,stop,resume,setLevel,boss,gong,duck,ready,offline,gongAt}
+function makeBGM(ac,dest,NBUF){
+  const XFADE=1.2,LOOK=.35,A2=45,PENT=[0,3,5,7,10];
+  const m2f=m=>440*Math.pow(2,(m-69)/12);
+  const dn=d=>A2+12*Math.floor(d/5)+PENT[d%5];
+  const DRUM={1:['kick',.3],2:['kick',.5],3:['kick',.78],4:['snare',.34],5:['tom',.5]};
+  const WAR_PH={
+    a:[[0,5,.32],[4,7,.28],[8,8,.34],[12,7,.26]],b:[[0,5,.32],[6,4,.27],[10,3,.3],[14,5,.28]],
+    c:[[0,8,.34],[4,10,.3],[8,9,.34],[12,7,.28]],d:[[0,6,.3],[6,7,.27],[10,5,.34]],
+    e:[[0,10,.34],[3,9,.28],[6,8,.3],[10,7,.3],[14,8,.28]],f:[[0,7,.3],[4,6,.28],[8,4,.3],[12,5,.34]],
+    g:[[0,8,.34],[2,9,.27],[4,10,.32],[8,12,.3],[12,10,.32]],h:[[0,7,.32],[4,5,.32],[10,4,.25],[14,5,.28]]};
+  const warMelody='abcdabefabcdagfh'+'abcdcgefagcdagfh';
+  const warDrums={a:'3...............',b:'3.......2.......',c:'3.......2...5...',d:'3.....5.2.......',
+    e:'3...5...3..52...',f:'3..52...3...5.5.',g:'3...3...2..52.5.',h:'3...5...3..55532'};
+  const TR={
+    field:{bpm:112,bars:32,sync:1,war:1,lv:{drum:.72,pluck:.19,tone:.18},drone:{midi:33,level:.035},drums:warDrums,
+      drumArr:'ababacbdababacbd'+'acbcacbdabacacbd',ph:WAR_PH,melArr:warMelody,tones:{0:[3,3],8:[5,3],16:[3,3],24:[7,3]}},
+    battle:{bpm:112,bars:32,sync:1,war:2,lv:{drum:.9,pluck:.23,tone:.18},drone:{midi:33,level:.045},drums:warDrums,
+      drumArr:'efefegfhefefgffh'+'egfgegfhefefggfh',ph:WAR_PH,melArr:warMelody,tones:{0:[3,3],8:[5,3],16:[3,3],24:[7,3]}},
+    boss:{bpm:124,bars:32,war:3,lv:{drum:.94,pluck:.23,tone:.2},drone:{midi:33,level:.055},drums:warDrums,
+      drumArr:'egfhegfheffhggfh'+'egfhegfhegfheghh',ph:WAR_PH,melArr:warMelody,tones:{0:[3,3],8:[2,3],16:[3,3],24:[5,3]}}};
+  for(const k in TR){const T=TR[k];T.melMap=new Map();for(let bar=0;bar<T.bars;bar++)for(const [st,d,vel,dur] of T.ph[T.melArr[bar]]||[])T.melMap.set(bar*16+st,[d,vel,dur]);}
+  const out=ac.createGain();out.gain.value=.8;out.connect(dest);
+  let duckV=1;const master=ac.createGain();master.gain.value=1;master.connect(out);
+  const osc=(type,f,t)=>{const o=ac.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);return o;};
+  const noiseSrc=()=>{const s=ac.createBufferSource();s.buffer=NBUF;s.loop=true;return s;};
+  let drumBuf=null;
+  const ready=(()=>{try{const u='__DRUM__';const bytes=Uint8Array.from(atob(u),c=>c.charCodeAt(0)).buffer;return ac.decodeAudioData(bytes).then(b=>{drumBuf=b;}).catch(()=>{});}catch(e){return Promise.resolve();}})();
+  function warDrum(t,kind,vel,dest){if(!drumBuf)return;const edge=kind==='tom'||kind==='snare';
+    const s=ac.createBufferSource();s.buffer=drumBuf;s.playbackRate.value=(edge?1.16:1)*(1+(Math.random()-.5)*.025);
+    const f=ac.createBiquadFilter();f.type=edge?'highpass':'lowpass';f.frequency.value=edge?140:2200;
+    const g=ac.createGain();g.gain.value=vel*(edge?.58:1.15);s.connect(f).connect(g).connect(dest);s.start(t);s.stop(t+drumBuf.duration+.05);}
+  function pluck(t,midi,vel,dest,dur){dur=dur||.7;if(!(vel>0))return;const f=m2f(midi);
+    const g=ac.createGain();g.connect(dest);const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=.7;
+    lp.frequency.setValueAtTime(Math.min(9000,f*9),t);lp.frequency.exponentialRampToValueAtTime(Math.max(260,f*1.6),t+.3);lp.connect(g);
+    for(const [mul,amp,type] of [[1,1,'triangle'],[2,.4,'sine'],[3,.18,'sine'],[4.02,.1,'sine']]){const o=osc(type,f*mul,t);o.detune.value=(Math.random()-.5)*7;const og=ac.createGain();og.gain.value=amp;o.connect(og).connect(lp);o.start(t);o.stop(t+dur+.1);}
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vel,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    const s=noiseSrc(),hp=ac.createBiquadFilter(),ng=ac.createGain();hp.type='highpass';hp.frequency.value=2400;s.connect(hp).connect(ng).connect(dest);
+    ng.gain.setValueAtTime(vel*.18,t);ng.gain.exponentialRampToValueAtTime(.0001,t+.045);s.start(t,Math.random());s.stop(t+.07);}
+  function longTone(t,midi,dur,vel,dest){if(!(vel>0))return;const f=m2f(midi);
+    const g=ac.createGain();g.connect(dest);const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=Math.min(3000,f*5);lp.Q.value=.6;lp.connect(g);
+    const vib=ac.createOscillator();vib.frequency.value=4.8;const vg=ac.createGain();vg.gain.value=f*.008;vib.connect(vg);
+    for(const [mul,amp,type] of [[1,.8,'triangle'],[2,.22,'sine'],[3,.1,'sine']]){const o=osc(type,f*mul,t);vg.connect(o.frequency);const og=ac.createGain();og.gain.value=amp;o.connect(og).connect(lp);o.start(t);o.stop(t+dur+.9);}
+    vib.start(t);vib.stop(t+dur+.9);
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vel,t+Math.min(.45,dur*.4));g.gain.setValueAtTime(vel,t+dur);g.gain.exponentialRampToValueAtTime(.0001,t+dur+.8);
+    const s=noiseSrc(),bp=ac.createBiquadFilter(),ng=ac.createGain();bp.type='bandpass';bp.frequency.value=f*3;bp.Q.value=1.4;s.connect(bp).connect(ng).connect(dest);
+    ng.gain.setValueAtTime(.0001,t);ng.gain.linearRampToValueAtTime(vel*.12,t+.4);ng.gain.setValueAtTime(vel*.12,t+dur);ng.gain.exponentialRampToValueAtTime(.0001,t+dur+.6);s.start(t,Math.random());s.stop(t+dur+.7);}
+  function warVoice(t,midi,dur,vel,dest,horn){const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=horn?1550:720;f.Q.value=.5;
+    const g=ac.createGain();f.connect(g).connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vel,t+(horn?.065:.025));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    for(const d of [-5,5]){const o=osc('triangle',m2f(midi),t);o.detune.value=d;o.connect(f);o.start(t);o.stop(t+dur+.05);}}
   // 铜锣（鸣金）
-  function gong(t,vol){[1,1.47,2.09,2.56,3.4].forEach((m,i)=>{const o=A.createOscillator(),g=A.createGain();o.type='sine';o.frequency.value=150*m*(1+Math.random()*.004);env(g,t,.01,2.6-i*.3,(vol||.22)/(1+i*.7),.0005);o.connect(g);g.connect(bus);g.connect(send);o.start(t);o.stop(t+2.8);});noise(t,.5,'bandpass',1800,1.2,(vol||.22)*.5,.4);}
-  // 二胡/胡笳：锯齿+颤音+低通，带滑音入音
-  function erhu(t,note,dur,vol){const o=A.createOscillator(),o2=A.createOscillator(),g=A.createGain(),lp=A.createBiquadFilter(),lfo=A.createOscillator(),lg=A.createGain();
-    o.type='sawtooth';o2.type='sawtooth';const f=hz(note);o.frequency.setValueAtTime(f*.94,t);o.frequency.exponentialRampToValueAtTime(f,t+.07);o2.frequency.setValueAtTime(f*.94*1.004,t);o2.frequency.exponentialRampToValueAtTime(f*1.004,t+.07);
-    lfo.frequency.value=5.4;lg.gain.value=f*.011;lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
-    lp.type='lowpass';lp.frequency.value=2300;lp.Q.value=2.2;
-    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.06);g.gain.setValueAtTime(vol*.9,t+dur*.7);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-    o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(bus);g.connect(send);lfo.start(t);o.start(t);o2.start(t);lfo.stop(t+dur+.05);o.stop(t+dur+.05);o2.stop(t+dur+.05);}
-  // 古筝：拨弦（三角波+快衰减+二次泛音）
-  function zheng(t,note,vol){const f=hz(note);[[1,1],[2,.35],[3,.12]].forEach(([m,a])=>{const o=A.createOscillator(),g=A.createGain();o.type='triangle';o.frequency.value=f*m;env(g,t,.003,1.1/m,vol*a,.0005);o.connect(g);g.connect(bus);g.connect(send);o.start(t);o.stop(t+1.3);});}
-  // 低音：空弦五度 + 低通脉冲
-  function bass(t,note,dur,vol){const o=A.createOscillator(),g=A.createGain(),lp=A.createBiquadFilter();o.type='sawtooth';o.frequency.value=hz(note);lp.type='lowpass';lp.frequency.value=380;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(lp);lp.connect(g);g.connect(bus);o.start(t);o.stop(t+dur+.05);}
-  function brass(t,note,dur,vol){[0,.006].forEach(dt=>{const o=A.createOscillator(),g=A.createGain(),lp=A.createBiquadFilter();o.type='sawtooth';o.frequency.value=hz(note)*(1+dt);lp.type='lowpass';lp.Q.value=1.5;lp.frequency.setValueAtTime(500,t);lp.frequency.exponentialRampToValueAtTime(2600,t+.12);lp.frequency.exponentialRampToValueAtTime(900,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.07);g.gain.setValueAtTime(vol*.85,t+dur*.8);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(lp);lp.connect(g);g.connect(bus);g.connect(send);o.start(t);o.stop(t+dur+.05);});}
-  // 杀喊声：短促齐喊“杀！”，多人、音高不下滑
-  function shout(t,vol,n,pitch){n=n||10;for(let i=0;i<n;i++){const tt=t+Math.random()*.05,f0=(pitch||180)*(.85+Math.random()*.4),dur=.2+Math.random()*.07;
-      const o=A.createOscillator(),g=A.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f0,tt);o.frequency.linearRampToValueAtTime(f0*1.06,tt+dur);
-      const f1=A.createBiquadFilter(),f2=A.createBiquadFilter();f1.type='bandpass';f2.type='bandpass';f1.Q.value=4;f2.Q.value=5;f1.frequency.value=800;f2.frequency.value=1250;
-      g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(vol/n*1.6,tt+.015);g.gain.exponentialRampToValueAtTime(.0001,tt+dur);
-      o.connect(f1);o.connect(f2);f1.connect(g);f2.connect(g);g.connect(bus);g.connect(send);o.start(tt);o.stop(tt+dur+.05);}
-    noise(t,.22,'bandpass',2200,.8,vol*.3,.2);}
-  // —— 旋律：8 小节，原创动机（羽调五声，4/4，两个乐句 + 呼应）——
-  // 每项 [起拍(16分), 音级(相对A3起的五声级), 时值(16分)]
-  const MEL=[
-    [0,8,4],[4,10,4],[8,11,4],[12,10,2],[14,8,2],
-    [16,9,4],[20,8,4],[24,10,8],
-    [32,10,4],[36,11,4],[40,12,4],[44,11,2],[46,10,2],
-    [48,11,8],[56,10,4],[60,8,4],
-    [64,12,4],[68,13,4],[72,12,4],[76,11,4],
-    [80,12,4],[84,11,4],[88,10,8],
-    [96,8,4],[100,10,4],[104,11,4],[108,12,4],
-    [112,10,12],[124,8,4]
-  ];
-  const BASS=[0,0,5,7, 0,0,5,7];          // 每小节低音级（相对 A，半音偏移）
-  let lvl=1,on=false,bossOn=false,step=0,nextT=0,timer=null,duckV=1;
-  function sched(t,k){
-    const bar=Math.floor(k/16)%8,s=k%16,pos=k%128;
-    const L=lvl+(bossOn?1:0);
-    // 鼓：基础两拍 + 逐级加密
-    if(s===0)taiko(t,.55,70);
-    if(s===8&&L>=1)taiko(t,.42,78);
-    if(s===6||s===10)taiko(t,.3,84);
-    if(L>=2&&(s===4||s===12))taiko(t,.26,92);
-    if(L>=3&&(s===2||s===14))taiko(t,.16,96);
-    if(L>=3&&(s===6||s===14))bangzi(t,.12);
-    if(L>=4&&(s%2===1))bangzi(t,.07);
-    if(bar%4===3&&s>=12&&L>=2)taiko(t,.3,88+ (s-12)*4);          // 四小节尾部滚鼓
-    // 低音
-    if(s===0||s===8){const b=BASS[bar];bass(t,38+b,S16*7,.24);if(L>=3)bass(t,50+b,S16*3,.08);}
-    // 旋律（二胡）：L1 起即有，鼓点弱时先露出
-    for(const m of MEL){if(m[0]%128===pos&&on){erhu(t,deg(m[1],0)+(L>=4?0:0),m[2]*S16*.95,.11+L*.015);}}
-    // 古筝琶音 L>=2
-    if(L>=2&&s%4===2){const arp=[0,2,3,4,3,2,5,4];zheng(t,deg(arp[(bar*4+(s>>2))%8]+5,0),.09+L*.01);}
-    // 铜管：L>=2 每小节长和弦，L>=3 加半小节重音
-    const rb=BASS[bar];
-    if(L>=2&&s===0){brass(t,50+rb+12,S16*14,.05+L*.008);brass(t,57+rb,S16*14,.04+L*.006);}
-    if(L>=3&&s===8){brass(t,62+rb,S16*5,.05);}
-    // 杀喊声：L>=2 每两小节首拍，L>=3 每小节首拍，L>=4 半小节也喊
-    if(L>=2&&s===0&&(bar%2===0||L>=3))shout(t+.01,.3+L*.04,8+L*2,170+L*6);
-    if(L>=4&&s===8)shout(t+.01,.3,12,200);
-  }
-  function loop(){if(!on)return;const lead=.35;while(nextT<A.currentTime+lead){sched(nextT,step);nextT+=S16;step++;}}
-  return{
-    start(){if(on)return;on=true;step=0;nextT=A.currentTime+.08;bus.gain.setTargetAtTime(duckV,A.currentTime,.1);loop();timer=setInterval(loop,90);},
-    stop(){on=false;clearInterval(timer);bus.gain.setTargetAtTime(0,A.currentTime,.4);},
-    resume(){if(on)return;on=true;nextT=A.currentTime+.08;bus.gain.setTargetAtTime(duckV,A.currentTime,.3);loop();timer=setInterval(loop,90);},
-    setLevel(l){lvl=Math.max(1,Math.min(4,l));},
-    boss(b){bossOn=!!b;},
-    gong(){gong(A.currentTime+.02,.26);},
-    duck(v){duckV=v;bus.gain.setTargetAtTime(v,A.currentTime,.2);},
-    offline(secs){on=true;step=0;nextT=0;const lead=secs;while(nextT<lead){sched(nextT,step);nextT+=S16;step++;}on=false;},
-    gongAt(t){gong(t,.26);}
-  };
+  function gong(t,vol){[1,1.47,2.09,2.56,3.4].forEach((m,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=150*m;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime((vol||.22)/(1+i*.7),t+.01);g.gain.exponentialRampToValueAtTime(.0005,t+2.6-i*.3);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.8);});}
+  function playStep(L,bar,st,t){const T=L.track,dp=T.drums[T.drumArr[bar]];
+    if(dp){const c=dp[st];if(c&&c!=='.'){const d=DRUM[c];if(d)warDrum(t,d[0],d[1]*T.lv.drum,L.gain);}}
+    const ev=T.melMap.get(bar*16+st);
+    if(ev&&(bar%2===0||(T.war>1&&st===0)))pluck(t,dn(ev[0]),(ev[1]||.34)*T.lv.pluck,L.gain,ev[2]||1);
+    if(st===0&&T.tones&&T.tones[bar]){const [d,b]=T.tones[bar];longTone(t,dn(d),b*60/T.bpm,T.lv.tone,L.gain);}
+    const root=[0,0,3,2][Math.floor(bar/4)%4];
+    if(st===0||(T.war>1&&st===8))warVoice(t,dn(root),.33,T.war>1?.075:.035,L.gain);
+    if(T.war>1&&bar%8===0&&(st===0||st===10))warVoice(t,dn(st===0?5:7),.42,.045,L.gain,true);}
+  let layers=[],cur='',on=false,timer=null,bossOn=false,paused=false;
+  function newLayer(name,prev){const T=TR[name],g=ac.createGain();g.gain.value=.0001;g.connect(master);
+    const L={name,track:T,gain:g,step:0,time:ac.currentTime+.12,spb:60/T.bpm/4,nodes:[]};
+    if(prev&&T.sync&&prev.track.sync){L.step=prev.step;L.time=prev.time;}
+    if(T.drone){const o=ac.createOscillator();o.type='triangle';o.frequency.value=m2f(T.drone.midi);const dg=ac.createGain();dg.gain.value=T.drone.level;o.connect(dg).connect(g);o.start();L.nodes.push(o);}
+    layers.push(L);return L;}
+  function fadeTo(L,v,dur){const t=ac.currentTime;L.gain.gain.cancelScheduledValues(t);L.gain.gain.setValueAtTime(Math.max(.0001,L.gain.gain.value),t);L.gain.gain.linearRampToValueAtTime(v,t+dur);}
+  function stopLayer(L){if(L.stopping)return;L.stopping=true;fadeTo(L,.0001,XFADE);setTimeout(()=>{for(const n of L.nodes){try{n.stop();}catch(e){}}try{L.gain.disconnect();}catch(e){}layers=layers.filter(x=>x!==L);},(XFADE+.3)*1000);}
+  function want(){return bossOn?'boss':paused?'field':'battle';}
+  function apply(){if(!on)return;const w=want();if(w===cur)return;const prev=layers.find(l=>!l.stopping);cur=w;const L=newLayer(w,prev);fadeTo(L,1,XFADE);for(const l of layers)if(l!==L)stopLayer(l);}
+  function pump(){if(!on||ac.state!=='running')return;apply();const ahead=ac.currentTime+LOOK;
+    for(const L of layers.slice()){if(L.time<ac.currentTime-.2)L.time=ac.currentTime+.05;const total=L.track.bars*16;
+      while(L.time<ahead){const s=L.step%total;playStep(L,Math.floor(s/16),s%16,L.time);L.step++;L.time+=L.spb;}}}
+  return{ready,
+    start(){if(on)return;on=true;timer=setInterval(pump,90);pump();},
+    resume(){this.start();},
+    stop(){if(!on)return;on=false;clearInterval(timer);for(const l of layers)stopLayer(l);cur='';},
+    setLevel(){},boss(b){bossOn=!!b;},
+    gong(){gong(ac.currentTime+.02,.26);},
+    duck(v){paused=v<.9;master.gain.setTargetAtTime(v,ac.currentTime,.25);},
+    // 离线渲染：直接排程 secs 秒
+    offline(secs,name){const L=newLayer(name||'battle');L.gain.gain.value=1;L.time=0;L.step=0;const total=L.track.bars*16;while(L.time<secs){const s=L.step%total;playStep(L,Math.floor(s/16),s%16,L.time);L.step++;L.time+=L.spb;}},
+    gongAt(t){gong(t,.26);}};
 }
