@@ -1,0 +1,1 @@
+{"cell": 192, "base": 168, "cols": 14, "rows": 5, "dirs": ["E", "SE", "S", "NE", "N"], "acts": {"run": [0, 6], "wind": [6, 8], "strike": [8, 10], "hit": [10, 11], "die": [11, 14]}}

@@ -17,6 +17,8 @@ for _k,_n in (('spara',6),('immortal',6),('pcav8',8),('comp8',8)):
     M[_k]=meta(R+'/'+_k+'/meta.js')
     for d in M[_k]['dirs']:
         for i in range(_n): img['%s_%s%d'%(_k,d,i)]=b64('%s/%s/%s%d.png'%(R,_k,d,i))
+img['hj_atlas']=b64(P('art','hj_art','hj_atlas_q.png'))
+M['hj']=json.load(open(P('art','hj_art','hj_atlas.json')))
 img['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'))
 M['atlas']=json.load(open(P('art','hero_art','hero_atlas.json')))
 img['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))

@@ -520,7 +520,20 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   const nm=T.art,C=META[nm],[dn,fl]=H8[sect(fa)],di=C.dirs.indexOf(dn),fi=Math.floor(wk)%T.nf,F=C.frames[di][fi],im=IMG[nm+'_'+dn+fi];
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
+const HJ=META.hj,HK=0.3;const hjc=document.createElement('canvas');hjc.width=hjc.height=HJ.cell;const hjx=hjc.getContext('2d');
+function drawHJ(col,row,x,y,sc,mir,alpha,flash,red){const cw=HJ.cell;ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);
+  let src=IMG.hj_atlas,a=col*cw,b=row*cw;
+  if(flash||red){hjx.clearRect(0,0,cw,cw);hjx.globalCompositeOperation='source-over';hjx.drawImage(IMG.hj_atlas,a,b,cw,cw,0,0,cw,cw);hjx.globalCompositeOperation='source-atop';hjx.fillStyle=flash?'rgba(255,255,255,.85)':'rgba(255,40,30,'+red+')';hjx.fillRect(0,0,cw,cw);src=hjc;a=0;b=0;}
+  ctx.drawImage(src,a,b,cw,cw,-cw/2*HK*sc,-HJ.base*HK*sc,cw*HK*sc,cw*HK*sc);ctx.restore();}
+function drawEnemyHJ(e,T,ey,fd){const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let col,yo=0,red=0;
+  if(e.atk){const k=e.atk.t/e.atk.dur;col=k<0.5?6:7;if(k>0.55)red=Math.min(.45,(k-.55)*1.2);}
+  else if(e.strikeT>0)col=e.strikeT>0.11?8:9;
+  else if(e.hitT>0)col=10;
+  else{const w=Math.floor(Math.abs(e.wk)*0.8)%6;col=w;yo=(w%3===2?-3:0)*T.sc*S;}
+  drawEA_HJ(col,di,e.x,ey+yo,T.sc*S,fl<0,fd<1?fd:null,e.flashT>0,red);}
+function drawEA_HJ(c,r,x,y,sc,m,al,f,red){drawHJ(c,r,x,y,sc,m,al,f,red);}
 function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;const fd=retreatT>0?Math.max(.02,retreatT/RT):1;
+  if(T.hj){drawEnemyHJ(e,T,ey,fd);return;}
   if(T.art){const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;drawArt(T,e.x,ey,e.fa,e.atk?0:e.wk,T.sc*S,(blink||fd<1)?(blink?.55:1)*fd:null,e.flashT>0,0);return;}
   const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let nm;
   if(e.atk)nm='raise_'+di;else if(e.strikeT>0)nm='strike_'+di;else if(e.hitT>0)nm='hit_'+di;else nm='walk_'+di+'_'+(Math.floor(Math.abs(e.wk))%6);
@@ -588,6 +601,7 @@ function draw(){
       if(T.mk){ctx.fillStyle=T.mk;ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.beginPath();ctx.arc(e.x,ey-38*T.sc*S,3.2*S,0,7);ctx.fill();ctx.stroke();}}
   }
   for(const c of corpses){const T=c.T,sc=T.sc*S,fly=c.t<0.22,al=c.t<0.45?1:Math.max(0,1-(c.t-0.45)/0.25);
+    if(T.hj){const col=c.t<0.1?11:c.t<0.26?12:13;drawHJ(col,0,c.x,c.y*SQ,sc,c.flip<0,al);continue;}
     if(T.art){drawArt(T,c.x,c.y*SQ,c.flip>0?0:Math.PI,0,sc,al,false,Math.min(1,c.t/0.3)*1.4*(c.flip>0?1:-1));continue;}
     ctx.save();ctx.translate(0,0);if(fly){drawEA('fly',c.x,c.y*SQ-Math.sin(c.t/0.3*Math.PI)*18-(1-c.t/0.3)*2,sc,c.flip,al);}else drawEA('dead',c.x,c.y*SQ,sc,c.flip,al);ctx.restore();}
   for(const p of slashes)drawCrescent(p);
