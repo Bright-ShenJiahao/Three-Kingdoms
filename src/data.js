@@ -100,3 +100,25 @@ const EVENTS=[
    {t:'买一副汤药',h:'得 回复40%生命　失 伤害-4%',fx:{heal:.4,all:.96}},
    {t:'赌一碗药酒',h:'一半一半：最大生命+15，或当前生命-20%',fx:{gamble:[{maxhpAdd:15},{hurt:.2}]}},
    {t:'婉拒',h:'无事发生',fx:{}}]}];
+
+// ---- 掉落与成长 ----
+const ETIER={};SECTS.forEach(S=>S.u.forEach((id,i)=>ETIER[id]=i));ETIER.brute=3;ETIER.brute2=2;
+// 按敌人档位 [杂兵,精英,小头目,首领]：杂兵60%直接给1银；银两需拾取；物品/刀法残卷概率
+const DROP={coin:0.6,silver:[0,5,15,60],item:[0.01,0.06,0.35,1],scroll:[0,0.03,0.2,1]};
+const SKPRICE={'黄':40,'玄':90,'地':160,'天':260};
+const ITEMS=[
+ {n:'干粮',g:'🍙',d:'回复20%气血',fx:{heal:.2}},{n:'磨刀石',g:'🪨',d:'全部伤害+2%',fx:{all:1.02}},
+ {n:'草鞋',g:'👞',d:'移速+2%',fx:{spd:1.02}},{n:'烈酒',g:'🍶',d:'最大生命+6',fx:{maxhpAdd:6}}];
+// 每波结束三选一：永久被动
+const PASSIVES=[
+ {id:'yongli',n:'勇力',g:'💪',d:'全部伤害+5%',fx:{all:1.05}},
+ {id:'qingshen',n:'轻身',g:'🪶',d:'移速+4%',fx:{spd:1.04}},
+ {id:'tiebu',n:'铁布衫',g:'🛡',d:'受到伤害-5%',fx:{take:.95}},
+ {id:'qiangti',n:'强体',g:'❤️',d:'最大生命+15',fx:{maxhpAdd:15}},
+ {id:'tuna',n:'吐纳',g:'🌬',d:'闪身冷却-7%',fx:{dcd:.93}},
+ {id:'zhaocai',n:'招财',g:'🧲',d:'拾取范围+30%',fx:{},pick:1.3},
+ {id:'fucai',n:'聚财',g:'🪙',d:'银两收益+15%',fx:{},gold:1.15},
+ {id:'yuxue',n:'浴血',g:'🩸',d:'气血回复+30点（立刻）',fx:{heal:.3}},
+ {id:'jingjin',n:'精进',g:'📈',d:'全部伤害+3%，受伤-3%',fx:{all:1.03,take:.97}},
+ {id:'jijian',n:'疾箭',g:'🏹',d:'射艺类伤害+10%',fx:{ranged:1.1}},
+ {id:'poyin',n:'破阵',g:'⚔️',d:'近战类伤害+8%',fx:{melee:1.08}}];
