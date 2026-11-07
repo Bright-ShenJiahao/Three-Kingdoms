@@ -73,13 +73,11 @@ for r in range(5):
         t,fy,xs=act[j][r];put(t,fy,xs,col,r,ratio)
 for j,col in enumerate((9,10)):
     t,fy,xs=act[3][j];put(t,fy,xs,col,0,ratio)
-K=0.185
+K=0.30
 sm=atlas.resize((round(atlas.width*K),round(atlas.height*K)),Image.LANCZOS)
-arr=np.array(sm);al=arr[...,3]>128
-arr[...,3]=al*255;arr[~al,:3]=0
-ring=ndi.binary_dilation(al,structure=np.ones((3,3),bool))&~al
-arr[ring]=[22,14,8,255]
-sm=Image.fromarray(arr)
-sm.quantize(colors=96,method=Image.FASTOCTREE,dither=Image.NONE).save('hj2_atlas_q.png',optimize=True)
-json.dump({'cell':round(CELL*K),'base':round(BASE*K),'cols':COLS,'rows':5,'nrun':6,'wind':6,'strike':7,'hit':8,'fly':9,'dead':10},open('hj2_atlas.json','w'))
+from PIL import ImageEnhance
+rgb=sm.convert('RGB');rgb=ImageEnhance.Color(rgb).enhance(1.18);rgb=ImageEnhance.Brightness(rgb).enhance(1.08)
+r=np.array(rgb);aa=np.array(sm)[...,3];sm=Image.fromarray(np.dstack([r,aa]))
+sm.save('hj2_atlas_q.png',optimize=True)
+json.dump({'cell':round(CELL*K),'base':round(BASE*K),'k':0.5,'cols':COLS,'rows':5,'nrun':6,'wind':6,'strike':7,'hit':8,'fly':9,'dead':10},open('hj2_atlas.json','w'))
 bg2=Image.new('RGBA',sm.size,(70,100,70,255));bg2.alpha_composite(sm);bg2.convert('RGB').save('/tmp/hj2prev.png');print(sm.size)

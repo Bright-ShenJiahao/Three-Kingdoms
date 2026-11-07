@@ -558,10 +558,10 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
 const HK=1,hjc=document.createElement('canvas');hjc.width=hjc.height=256;const hjx=hjc.getContext('2d');
 const HJS={1:{M:META.hj,k:'hj_atlas',run:8,wind:[8,9],strike:[10,11],hit:12,die:[13,14,15]},2:{M:META.hj2,k:'hj2_atlas',run:6,wind:[6,6],strike:[7,7],hit:8,die:[9,9,10]},3:{M:META.hj3,k:'hj3_atlas',run:6,wind:[6,6],strike:[7,7],hit:8,die:[9,9,10]}};
-function drawHJ(H,col,row,x,y,sc,mir,alpha,flash,red){const cw=H.M.cell,im=IMG[H.k];ctx.save();ctx.imageSmoothingEnabled=false;if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);
+function drawHJ(H,col,row,x,y,sc,mir,alpha,flash,red){const cw=H.M.cell,im=IMG[H.k];ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);
   let src=im,a=col*cw,b=row*cw;
   if(flash||red){hjx.clearRect(0,0,cw,cw);hjx.globalCompositeOperation='source-over';hjx.drawImage(im,a,b,cw,cw,0,0,cw,cw);hjx.globalCompositeOperation='source-atop';hjx.fillStyle=flash?'rgba(255,255,255,.85)':'rgba(255,40,30,'+red+')';hjx.fillRect(0,0,cw,cw);src=hjc;a=0;b=0;}
-  ctx.drawImage(src,a,b,cw,cw,-cw/2*HK*sc,-H.M.base*HK*sc,cw*HK*sc,cw*HK*sc);ctx.restore();}
+  const hk=H.M.k||HK;ctx.drawImage(src,a,b,cw,cw,-cw/2*hk*sc,-H.M.base*hk*sc,cw*hk*sc,cw*hk*sc);ctx.restore();}
 function drawEnemyHJ(e,T,ey,fd){const H=HJS[T.hj],[dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let col,red=0;
   if(e.atk){const k=e.atk.t/e.atk.dur;col=H.wind[k<0.5?0:1];if(k>0.55)red=Math.min(.45,(k-.55)*1.2);}
   else if(e.strikeT>0)col=H.strike[e.strikeT>0.11?0:1];
