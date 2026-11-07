@@ -99,8 +99,8 @@ pages={'menu':menu,'cfg':cfg,'game':game,'settle':settle}
 esc=lambda s:s.replace('</script','<@/script')
 for k,v in pages.items(): assert '<@/script' not in v
 shell='''<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>无名三国录：幸存者</title>
-<style>html,body{margin:0;height:100%;background:#120d09;overflow:hidden}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#120d09}</style></head><body>
-<iframe id="fr" allow="autoplay"></iframe><div id="ld" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#120d09;color:#d6b97e;font:20px/1 serif;letter-spacing:6px;z-index:9">载入中…</div>
+<style>html,body{margin:0;height:100%;background:#120d09;overflow:hidden}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#120d09}#rot{position:fixed;inset:0;z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#120d09;color:#d6b97e;font:22px/1.5 serif;letter-spacing:.1em;text-align:center}#rot i{font-size:64px;font-style:normal;display:block;animation:rt 2s ease-in-out infinite}@keyframes rt{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}@media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}</style></head><body><div id="rot"><i>📱</i>请将手机横屏游玩<br><small style="font-size:15px;opacity:.7">（关闭系统的“竖排方向锁定”后旋转手机）</small></div>
+<iframe id="fr" allow="autoplay"></iframe><script>addEventListener("pointerdown",function(){try{screen.orientation.lock("landscape").catch(function(){})}catch(e){}},{once:true})</script><div id="ld" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#120d09;color:#d6b97e;font:20px/1 serif;letter-spacing:6px;z-index:9">载入中…</div>
 '''+''.join('<script type="text/plain" id="p_%s">%s</script>\n'%(k,esc(v)) for k,v in pages.items())+'''
 <script>
 const AT=[[5,4,2,1,1,2,1,3],[3,2,1,5,1,4,1,3],[4,2,5,1,1,2,1,3],[4,2,4,1,5,2,1,3],[2,1,1,1,1,2,6,4]];

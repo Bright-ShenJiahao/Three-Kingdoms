@@ -1,6 +1,6 @@
 const ASSETS = __ASSETS__;
 (async function(){
-const VH=640;                 // 视野高度（世界单位）；步兵 32 高 → 约占屏高 1/20
+let VH=640;                 // 视野高度（世界单位）；步兵 32 高 → 约占屏高 1/20
 const WAVES=8, WAVE_TIME=60;
 /*__DATA__*/
 /*__BGM__*/
@@ -107,7 +107,7 @@ function resize(){
   if(phoneSim){h=vh-16;w=Math.min(vw-16,Math.round(h*9/19.5));}
   stage.style.width=w+'px';stage.style.height=h+'px';
   DPR=Math.min(devicePixelRatio||1,3);cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
-  stage.style.setProperty('--u',(h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);
+  const small=matchMedia('(pointer:coarse)').matches||vh<520||phoneSim;VH=small?400:640;stage.style.setProperty('--u',(small?Math.max(h/1000,.62):h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);
 }
 addEventListener('resize',resize);resize();
 const skills=$('skills');
