@@ -557,7 +557,7 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
 const HK=1,hjc=document.createElement('canvas');hjc.width=hjc.height=256;const hjx=hjc.getContext('2d');
-const HJS={1:{M:META.hj,k:'hj_atlas',run:8,wind:[8,9],strike:[10,11],hit:12,die:[13,14,15]},2:{M:META.hj2,k:'hj2_atlas',run:6,wind:[6,6],strike:[7,7],hit:8,die:[9,9,10]}};
+const HJS={1:{M:META.hj,k:'hj_atlas',run:8,wind:[8,9],strike:[10,11],hit:12,die:[13,14,15]},2:{M:META.hj2,k:'hj2_atlas',run:6,wind:[6,6],strike:[7,7],hit:8,die:[9,9,10]},3:{M:META.hj3,k:'hj3_atlas',run:6,wind:[6,6],strike:[7,7],hit:8,die:[9,9,10]}};
 function drawHJ(H,col,row,x,y,sc,mir,alpha,flash,red){const cw=H.M.cell,im=IMG[H.k];ctx.save();ctx.imageSmoothingEnabled=false;if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);
   let src=im,a=col*cw,b=row*cw;
   if(flash||red){hjx.clearRect(0,0,cw,cw);hjx.globalCompositeOperation='source-over';hjx.drawImage(im,a,b,cw,cw,0,0,cw,cw);hjx.globalCompositeOperation='source-atop';hjx.fillStyle=flash?'rgba(255,255,255,.85)':'rgba(255,40,30,'+red+')';hjx.fillRect(0,0,cw,cw);src=hjc;a=0;b=0;}
