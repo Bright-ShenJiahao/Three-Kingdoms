@@ -21,6 +21,8 @@ img['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'))
 M['atlas']=json.load(open(P('art','hero_art','hero_atlas.json')))
 img['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))
 M['eatlas']=json.load(open(P('art','enemy_art','enemy_atlas.json')))
+img['enemy_new']=b64(P('art','enemy_new','enemy_atlas_q.png'))
+M['enatlas']=json.load(open(P('art','enemy_new','enemy_atlas.json')))
 old=open(P('src','greybox.template.html'),encoding='utf-8').read()
 head=old[:old.index('<script>')]
 head=head.replace('<h4>同屏敌人数量</h4>','<h4>地面压扁（1 = 不压扁，越小越斜）</h4>\n  <label><input id="sQ" type="range" min="0.5" max="1" step="0.05" value="0.7"> <span id="vQ"></span></label>\n  <h4>同屏敌人数量</h4>')

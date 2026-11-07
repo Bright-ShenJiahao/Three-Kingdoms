@@ -5,6 +5,7 @@ const WAVES=8, WAVE_TIME=60;
 const TYPES={
  spara:{w:70,sp:52,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:.5,dmg:4,ac:1.6,ring:0,mk:null},
  archer:{w:20,sp:40,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:.8,dmg:5,ac:2.8,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
+ hj2:{w:60,sp:52,r:10,hp:1,nm:'spara',alt:1,sc:1,reach:26,ar:30,aw:.5,dmg:4,ac:1.6,ring:0,mk:null},
  pers:{w:15,sp:58,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:.5,dmg:5,ac:1.6,ring:0,mk:null},
  pcav:{w:8,sp:95,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:.45,dmg:8,ac:2.0,ring:0,kbm:.5,mk:'#c46bff'},
  comp:{w:6,sp:82,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:.5,dmg:10,ac:2.2,ring:0,kbm:.4,mk:'#ff9a3a'},
@@ -17,7 +18,7 @@ function pickType(){const w=wave;let t=[['spara',100]];
   if(w==2)t=[['spara',80],['archer',20]];else if(w==3)t=[['spara',60],['archer',20],['immortal',20]];
   else if(w>=4)t=[['spara',w>=5?40:50],['archer',w>=5?25:20],['immortal',w>=5?25:20]];
   if(w>=4){let n=0;for(const e of enemies)if(e.type=='brute2')n++;if(n<1+Math.floor((w-4)/2)&&Math.random()<0.03)return 'brute2';}
-  t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
+  t.push(['hj2',t[0][1]*0.9]);t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
   let sum=0;for(const x of t)sum+=x[1];let r=Math.random()*sum;for(const x of t){r-=x[1];if(r<=0)return x[0];}return 'spara';}
 const arrows=[];
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
@@ -408,12 +409,13 @@ function drawFoot(nm,x,y,fa,wk,sc,alpha){
 }
 const DIRS5=['E','SE','S','NE','N'];
 const EA=META.eatlas,EAN={};EA.names.forEach((n,i)=>EAN[n]=i);const EK=30/216;
+const EA2=META.enatlas,EAN2={};EA2.names.forEach((n,i)=>EAN2[n]=i);const EK2=30/EA2.bodyH;
 const flc=document.createElement('canvas');flc.width=flc.height=EA.cell;const fcx=flc.getContext('2d');
-function drawEA(name,x,y,sc,flip,alpha,flash){const n=EAN[name],cw=EA.cell,sx=(n%EA.cols)*cw,sy=Math.floor(n/EA.cols)*cw;
+function drawEA(name,x,y,sc,flip,alpha,flash,alt){const A=alt?EA2:EA,N=alt?EAN2:EAN,K=alt?EK2:EK,IM=alt?IMG.enemy_new:IMG.enemy_atlas,n=N[name],cw=A.cell,sx=(n%A.cols)*cw,sy=Math.floor(n/A.cols)*cw;
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(flip<0)ctx.scale(-1,1);
-  let src=IMG.enemy_atlas,a=sx,b=sy;
-  if(flash){fcx.clearRect(0,0,cw,cw);fcx.globalCompositeOperation='source-over';fcx.drawImage(IMG.enemy_atlas,sx,sy,cw,cw,0,0,cw,cw);fcx.globalCompositeOperation='source-atop';fcx.fillStyle='rgba(255,255,255,.85)';fcx.fillRect(0,0,cw,cw);src=flc;a=0;b=0;}
-  ctx.drawImage(src,a,b,cw,cw,-cw/2*EK*sc,-EA.base*EK*sc,cw*EK*sc,cw*EK*sc);ctx.restore();}
+  let src=IM,a=sx,b=sy;
+  if(flash){fcx.clearRect(0,0,cw,cw);fcx.globalCompositeOperation='source-over';fcx.drawImage(IM,sx,sy,cw,cw,0,0,cw,cw);fcx.globalCompositeOperation='source-atop';fcx.fillStyle='rgba(255,255,255,.85)';fcx.fillRect(0,0,cw,cw);src=flc;a=0;b=0;}
+  ctx.drawImage(src,a,b,cw,cw,-cw/2*K*sc,-A.base*K*sc,cw*K*sc,cw*K*sc);ctx.restore();}
 function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFinite(wk))wk=0;wk=Math.abs(wk);
   const nm=T.art,C=META[nm],[dn,fl]=H8[sect(fa)],di=C.dirs.indexOf(dn),fi=Math.floor(wk)%T.nf,F=C.frames[di][fi],im=IMG[nm+'_'+dn+fi];
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
@@ -423,7 +425,7 @@ function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;
   const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let nm;
   if(e.atk)nm='raise_'+di;else if(e.strikeT>0)nm='strike_'+di;else if(e.hitT>0)nm='hit_'+di;else nm='walk_'+di+'_'+(Math.floor(Math.abs(e.wk))%6);
   const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;
-  drawEA(nm,e.x,ey,T.sc*S,fl,blink?0.55:null,e.flashT>0);}
+  drawEA(nm,e.x,ey,T.sc*S,fl,blink?0.55:null,e.flashT>0,T.alt);}
 const AT=META.atlas,AK=0.168,ATN={};AT.names.forEach((n,i)=>ATN[n]=i);
 function drawHero(x,y,fa,wk,sc,alpha,pose){
   if(!isFinite(fa))fa=0;if(!isFinite(wk))wk=0;
@@ -487,7 +489,7 @@ function draw(){
   }
   for(const c of corpses){const T=c.T,sc=T.sc*S,fly=c.t<0.3,al=c.t<0.6?1:Math.max(0,1-(c.t-0.6)/0.3);
     if(T.art){drawArt(T,c.x,c.y*SQ,c.flip>0?0:Math.PI,0,sc,al,false,Math.min(1,c.t/0.3)*1.4*(c.flip>0?1:-1));continue;}
-    ctx.save();ctx.translate(0,0);if(fly){drawEA('fly',c.x,c.y*SQ-Math.sin(c.t/0.3*Math.PI)*18-(1-c.t/0.3)*2,sc,c.flip,al);}else drawEA('dead',c.x,c.y*SQ,sc,c.flip,al);ctx.restore();}
+    ctx.save();ctx.translate(0,0);if(fly){drawEA('fly',c.x,c.y*SQ-Math.sin(c.t/0.3*Math.PI)*18-(1-c.t/0.3)*2,sc,c.flip,al,false,T.alt);}else drawEA('dead',c.x,c.y*SQ,sc,c.flip,al,false,T.alt);ctx.restore();}
   for(const p of slashes)drawCrescent(p);
   for(const f of fxs)f.drw&&f.drw(f.t);
   for(const p of arrows){ctx.save();ctx.strokeStyle='#f6e6b0';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(p.x,p.y*SQ-18*S);ctx.lineTo(p.x+p.dx*14*S,p.y*SQ-18*S+p.dy*14*S);ctx.stroke();ctx.restore();}
