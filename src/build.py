@@ -13,16 +13,16 @@ for k in ['grass','dirt','trod','mud']:
     img['g_'+k]='data:image/jpeg;base64,'+base64.b64encode(buf.getvalue()).decode()
 props=meta(R+'/props/meta.js'); M['props']=props
 for k in props: img['p_'+k]=b64('%s/props/%s.png'%(R,k))
-for _k,_n in (('spara',6),('immortal',6),('pcav8',8),('comp8',8)):
+for _k,_n in (('immortal',6),('pcav8',8),('comp8',8)):
     M[_k]=meta(R+'/'+_k+'/meta.js')
     for d in M[_k]['dirs']:
         for i in range(_n): img['%s_%s%d'%(_k,d,i)]=b64('%s/%s/%s%d.png'%(R,_k,d,i))
-img['hj_atlas']=b64(P('art','hj_art','hj_atlas_q.png'))
-M['hj']=json.load(open(P('art','hj_art','hj_atlas.json')))
 img['hj2_atlas']=b64(P('art','hj2_art','hj2_atlas_q.png'))
 M['hj2']=json.load(open(P('art','hj2_art','hj2_atlas.json')))
 img['hj3_atlas']=b64(P('art','hj3_art','hj3_atlas_q.png'))
 M['hj3']=json.load(open(P('art','hj3_art','hj3_atlas.json')))
+for _n in ('hj4','hj5'):
+    img[_n+'_atlas']=b64(P('art',_n+'_art',_n+'_atlas_q.png'));M[_n]=json.load(open(P('art',_n+'_art',_n+'_atlas.json')))
 img['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'))
 M['atlas']=json.load(open(P('art','hero_art','hero_atlas.json')))
 img['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))
