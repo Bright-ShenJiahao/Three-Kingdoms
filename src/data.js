@@ -104,7 +104,7 @@ const EVENTS=[
 // ---- 掉落与成长 ----
 const ETIER={};SECTS.forEach(S=>S.u.forEach((id,i)=>ETIER[id]=i));ETIER.brute=3;ETIER.brute2=2;
 // 按敌人档位 [杂兵,精英,小头目,首领]：杂兵60%直接给1银；银两需拾取；物品/刀法残卷概率
-const DROP={coin:0.6,silver:[0,5,15,60],item:[0.01,0.06,0.35,1],scroll:[0,0.03,0.2,1]};
+const DROP={coin:0.6,silver:[0,5,15,60],item:[0.01,0.06,0.35,1],scroll:[0,0.03,0.2,1],gf:[0,0.015,0.1,1],wp:[0,0.015,0.1,1]};
 const SKPRICE={'黄':40,'玄':90,'地':160,'天':260};
 const ITEMS=[
  {n:'干粮',g:'🍙',d:'回复20%气血',fx:{heal:.2}},{n:'磨刀石',g:'🪨',d:'全部伤害+2%',fx:{all:1.02}},

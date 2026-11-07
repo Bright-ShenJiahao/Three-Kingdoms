@@ -103,7 +103,7 @@ function pick(i){cur=i;const o=OR[i];OR.forEach((x,j)=>x.el.classList.toggle('on
  L('eff').innerHTML='特点：'+o.e+'<br>起手武器：'+o.w[0]+'（'+o.w[2]+'）　擅长：'+AN[o.a.reduce((m,v,k)=>(k>0&&k<7&&k!==4&&k!==5&&v>o.a[m]?k:m),1)];L('ko').textContent=o.n;
  o.a.forEach((v,k)=>{L('ab'+k).style.width=v*10+'%';L('av'+k).textContent=v});
  const wu=o.main==='武艺',ts=wu?1:5,ws=wu?5:1;
- L('slots').innerHTML=`<div class="rowl"><em>武器</em><div class="slot f w">${o.w[1]}</div><span class="hint">${o.w[0]}</span></div>`+row('武艺',ws,wu?o.s[0]:'')+row('天书',ts,wu?'':o.s[0])+`<div class="rowl"><em>身法</em><div class="slot q">身</div><span class="hint">${o.q}</span></div>`+row('功法',3,'');
+ L('slots').innerHTML=`<div class="rowl"><em>武器</em><div class="slot f w">${o.w[1]}</div><span class="hint">${o.w[0]}</span></div>`+row('武艺',5,wu?o.s[0]:'')+row('术法',5,wu?'':o.s[0])+row('功法',3,'')+`<div class="rowl"><em>身法</em><div class="slot q">身</div><span class="hint">${o.q}</span></div>`;
  L('sk').innerHTML=`<b>${o.s[1]}</b>：${o.s[2]}<br><b>${o.q}</b>（身法）：${o.qd}`;
  const sl=L('seal');sl.style.animation='none';sl.offsetHeight;sl.style.animation='stamp .3s cubic-bezier(.2,1.6,.4,1)'}
 pick(0);
