@@ -53,7 +53,7 @@ p=rows[5][0];sl=p[1];pm=(lab[sl]==p[0])&fg[sl]
 sub=a[sl].copy();sub[...,1]=np.minimum(sub[...,1],np.maximum(sub[...,0],sub[...,2])+8)
 rg=np.zeros(pm.shape+(4,),np.uint8);rg[...,:3]=np.clip(sub,0,255);rg[...,3]=pm*255
 Image.fromarray(rg).save('portrait.png')
-K=0.5
+K=0.31
 sm=atlas.resize((round(atlas.width*K),round(atlas.height*K)),Image.LANCZOS)
 arr=np.array(sm);al=arr[...,3]>128
 arr[...,3]=al*255;arr[~al,:3]=0
