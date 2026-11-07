@@ -45,7 +45,7 @@ for r in range(5):
         sub[...,1]=np.minimum(sub[...,1],np.maximum(sub[...,0],sub[...,2])+8)
         rgba=np.zeros(m.shape+(4,),np.uint8);rgba[...,:3]=np.clip(sub,0,255);rgba[...,3]=m*255
         t=Image.fromarray(rgba)
-        ox=round(CELL/2-cx);oy=round(BASE-fy)
+        ox=max(0,min(CELL-t.width,round(CELL/2-cx)));oy=min(round(BASE-fy),CELL-t.height)
         assert ox>=0 and oy>=0 and ox+t.width<=CELL and oy+t.height<=CELL,(r,k,ox,oy,t.size)
         atlas.alpha_composite(t,(k*CELL+ox,r*CELL+oy))
 # portrait

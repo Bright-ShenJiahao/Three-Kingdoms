@@ -1,9 +1,9 @@
 // ===== 数据表：改数值只改这里，不用碰 script.js =====
 // 敌人类型
 const TYPES={
- spara:{w:70,sp:72,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:0.33,dmg:4,ac:1.12,ring:0,mk:null},
+ spara:{w:70,sp:72,r:10,hp:1,nm:'spara',hj:1,sc:1,reach:26,ar:30,aw:0.5,dmg:4,ac:1.12,ring:0,mk:null},
  archer:{w:20,sp:60,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:0.52,dmg:5,ac:1.96,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
- pers:{w:15,sp:75,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:0.33,dmg:5,ac:1.12,ring:0,mk:null},
+ pers:{w:15,sp:75,r:10,hp:2,nm:'spara',hj:1,sc:1.15,reach:34,ar:38,aw:0.5,dmg:5,ac:1.12,ring:0,mk:null},
  pcav:{w:8,sp:124,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:0.29,dmg:8,ac:1.4,ring:0,kbm:.5,mk:null},
  comp:{w:6,sp:107,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:0.33,dmg:10,ac:1.54,ring:0,kbm:.4,mk:null},
  immortal:{w:22,sp:56,r:12,hp:6,nm:'immortal',art:'immortal',nf:6,sc:1.1,reach:30,ar:34,aw:0.39,dmg:6,ac:1.4,ring:0,kbm:.3,mk:'#6ab4ff'},
