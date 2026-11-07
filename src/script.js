@@ -3,6 +3,7 @@ const ASSETS = __ASSETS__;
 const VH=640;                 // 视野高度（世界单位）；步兵 32 高 → 约占屏高 1/20
 const WAVES=8, WAVE_TIME=60;
 /*__DATA__*/
+/*__BGM__*/
 let wave=1;
 function waveRow(){return WAVE_TABLE[Math.min(wave,WAVE_TABLE.length)-1]||WAVE_TABLE[0];}
 function pickType(){const row=waveRow();
@@ -243,6 +244,15 @@ function nearest(k,maxd){return enemies.map(e=>({e,d:Math.hypot(e.x-hero.x,(e.y-
 let AC=null,NB=null,sfxT={};
 function acx(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*0.5,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;NB=b;}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
 addEventListener('pointerdown',acx);addEventListener('keydown',acx);
+// --- 战场配乐接线 ---
+let BGMo=null,bgmWave=-1,bgmBoss=false;
+setInterval(()=>{const a=AC;if(!a||typeof started==='undefined'||!started)return;
+  if(!BGMo){BGMo=makeBGM(a,a.destination,NB);}
+  if(over){BGMo.stop();return;}
+  BGMo.resume&&BGMo.resume();
+  if(wave!==bgmWave){if(bgmWave>0&&wave>bgmWave)BGMo.gong();bgmWave=wave;BGMo.setLevel(1+Math.floor((wave-1)/2));}
+  if(bossPhase!==bgmBoss){bgmBoss=bossPhase;BGMo.boss(bossPhase);}
+  BGMo.duck(paused?.35:1);},300);
 function sfx(k){const a=acx();if(!a)return;const now=a.currentTime,lim={hit:0.045,kill:0.06,hurt:0.12,dash:0.1,swing:0.12,shield:0.06,arrow:0.1};if(now-(sfxT[k]||-9)<(lim[k]||0.05))return;sfxT[k]=now;
  const g=a.createGain();g.connect(a.destination);
  const noise=(dur,f0,f1,q,vol,type)=>{const s=a.createBufferSource();s.buffer=NB;s.playbackRate.value=0.8+Math.random()*0.4;const f=a.createBiquadFilter();f.type=type||'bandpass';f.Q.value=q;f.frequency.setValueAtTime(f0,now);f.frequency.exponentialRampToValueAtTime(f1,now+dur);const v=a.createGain();v.gain.setValueAtTime(vol,now);v.gain.exponentialRampToValueAtTime(0.001,now+dur);s.connect(f);f.connect(v);v.connect(g);s.start(now);s.stop(now+dur+0.02);};

@@ -30,6 +30,6 @@ head=(head.replace('灰盒测试：黄巾荒场','灰盒测试 3：无尽战场'
  .replace('「刀·剑气」，闪身时不能攻击；击倒的敌人会从场边入场点补进来。','「刀·剑气」，闪身时不能攻击。无尽地图，每 40 秒一波，波间停顿；10 分钟一局，9 分钟刷大个子（张角占位）。美术来自骑兵幸存者仓库（主角骑马、敌人是波斯步兵，均为占位）。')
  .replace('value="5" max="150"','value="5" max="150"'))
 assert 'brute' in head and '立刻结束本波' in head
-js=open(P('src','script.js'),encoding='utf-8').read().replace('/*__DATA__*/',open(P('src','data.js'),encoding='utf-8').read()).replace('__ASSETS__',json.dumps({'img':img,'meta':M}))
+js=open(P('src','script.js'),encoding='utf-8').read().replace('/*__BGM__*/',open(P('src','bgm.js'),encoding='utf-8').read()).replace('/*__DATA__*/',open(P('src','data.js'),encoding='utf-8').read()).replace('__ASSETS__',json.dumps({'img':img,'meta':M}))
 open(P('build','greybox3.html'),'w',encoding='utf-8').write(head+'<script>\n'+js+'\n</script>\n</body>\n</html>\n')
 print('built',len(head+js)//1024,'KB')
