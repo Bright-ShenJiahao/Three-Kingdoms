@@ -1,23 +1,26 @@
+import os
+ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+def P(*a): return os.path.join(ROOT,*a)
 import json,re
-M='/home/claude/menu/'
+M=P('src','menu')+'/'
 menu=open(M+'menu2.html').read()
 cfg=open(M+'cfg.html').read()
 settle=open(M+'settle.html').read()
-game=open('/home/claude/greybox3/greybox3.html').read()
+game=open(P('build','greybox3.html')).read()
 
 import base64,json as _j
 def b64(p): return 'data:image/png;base64,'+base64.b64encode(open(p,'rb').read()).decode()
-HA=_j.load(open('/home/claude/hero_art/hero_atlas.json'));EAJ=_j.load(open('/home/claude/enemy_art/enemy_atlas.json'))
+HA=_j.load(open(P('art','hero_art','hero_atlas.json')));EAJ=_j.load(open(P('art','enemy_art','enemy_atlas.json')))
 def newart(h):
     i=h.find('const A=');j=h.find(';const IMG={}',i)
     A=_j.loads(h[i+8:j])
     A['img']={k:v for k,v in A['img'].items() if not (k.startswith('hw_') or k.startswith('spara_'))}
-    A['img']['hero_atlas']=b64('/home/claude/hero_art/hero_atlas_q.png');A['img']['enemy_atlas']=b64('/home/claude/enemy_art/enemy_atlas_q.png')
+    A['img']['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'));A['img']['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))
     A['meta']['atlas']=HA;A['meta']['eatlas']=EAJ
     h=h[:i]+'const A='+_j.dumps(A,ensure_ascii=False)+h[j:]
     NEW="""const _HA=META.atlas,_EA=META.eatlas;
 function _at(im,J,k,name,x,y,sc,fl){const n=J.names.indexOf(name),cw=J.cell,c=J.cols;ctx.save();ctx.translate(x,y);if(fl)ctx.scale(-1,1);ctx.drawImage(im,(n%c)*cw,Math.floor(n/c)*cw,cw,cw,-cw/2*k*sc,-J.base*k*sc,cw*k*sc,cw*k*sc);ctx.restore()}
-function fh(nm_,dir,fi,x,y,sc,fl){const di=['E','SE','S','NE','N'].indexOf('E');if(nm_==='hw')_at(IMG.hero_atlas,_HA,0.168,'walk_0_'+(fi%6),x,y,sc*1.5,fl);else _at(IMG.enemy_atlas,_EA,30/216,'walk_0_'+(fi%6),x,y,sc*1.4,fl)}
+function fh(nm_,dir,fi,x,y,sc,fl){const di=['E','SE','S','NE','N'].indexOf('E');if(nm_==='hw')_at(IMG.hero_atlas,_HA,0.25,'walk_0_'+(fi%6),x,y,sc*1.5,fl);else _at(IMG.enemy_atlas,_EA,30/216,'walk_0_'+(fi%6),x,y,sc*1.4,fl)}
 """
     a=h.find('function fh(');b=h.find('\n',a)
     h=h[:a]+NEW+h[b+1:]
@@ -45,7 +48,7 @@ cfg=rep(cfg,'<span class="tag">${o.w[0]}</span>','<span class="tag">${o.tg}</spa
 cfg=rep(cfg,'#L::-webkit-scrollbar-thumb','#L::-webkit-scrollbar-thumb') if False else cfg
 
 import json as _jj
-_UI=_jj.load(open('/home/claude/ui_art/ui.json'))
+_UI=_jj.load(open(P('art','ui','ui.json')))
 _keep=['c_tl','c_tr','c_bl','c_br','b_go','b_n','o_nong','o_gong','o_zu','o_ma','o_shu','t_wanren','t_pojun','t_tiebi','t_jifeng','t_zhanjiang','t_shenshe','pframe']
 _U={k:_UI[k] for k in _keep}
 _css="""<style>
@@ -122,7 +125,7 @@ addEventListener('message',e=>{if(e.source!==fr.contentWindow)return;const d=e.d
 show('menu');
 </script></body></html>'''
 import re as _re
-TDJ=open('/home/claude/greybox3/script.js').read()
+TDJ=open(P('src','script.js')).read()
 m=_re.search(r"const TITLES=(\{.*?\});\nfunction applyTitle",TDJ,_re.S)
 import subprocess,json as _j2
 js=m.group(1)
@@ -131,5 +134,5 @@ shell=shell.replace('__TD__',out)
 m2=_re.search(r"const FAC=(\{.*?\});\nconst FACOF",TDJ,_re.S)
 out2=subprocess.run(['node','-e','const f='+m2.group(1)+';for(const k in f){delete f[k].f;delete f[k].tags}console.log(JSON.stringify(f))'],capture_output=True,text=True).stdout.strip()
 shell=shell.replace('__FD__',out2)
-open('index.html','w').write(shell)
+open(P('index.html'),'w').write(shell)
 print(len(shell)/1e6,'MB')

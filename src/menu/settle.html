@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>结算界面样板</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#1a0f0c;color:#e8dcc0;font-family:"Noto Serif SC","Songti SC","SimSun",serif}
+body{background:radial-gradient(ellipse at 50% 30%,#4a2018 0,#241210 55%,#120a08 100%);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto}
+#W{width:min(1180px,100%);padding:clamp(8px,2vw,28px)}
+.frame{position:relative;background:#0c0a09;border:3px solid #6b5426;box-shadow:0 0 0 1px #000,0 0 0 5px #1c1409,0 0 0 6px #4a3a1a,0 20px 60px #000;padding:clamp(12px,2.4vw,30px)}
+.frame:before,.frame:after{content:"";position:absolute;width:26px;height:26px;border:3px solid #b8923f;pointer-events:none}
+.frame:before{left:-6px;top:-6px;border-right:0;border-bottom:0}.frame:after{right:-6px;bottom:-6px;border-left:0;border-top:0}
+.head{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;min-height:110px;position:relative}
+.ttl{position:relative;padding-right:46px}
+h1{font-family:"STKaiti","KaiTi","Kaiti SC","楷体","Noto Serif SC",serif;font-weight:900;font-size:clamp(44px,8.4vw,92px);line-height:1;color:#d63a2a;letter-spacing:.04em;white-space:nowrap;
+ text-shadow:0 2px 0 #5a0f08,0 0 18px rgba(214,58,42,.45),3px 3px 0 #2a0604;transform:rotate(-3deg);transform-origin:left bottom;margin-left:6px}
+.win h1{color:#e8b83a;text-shadow:0 2px 0 #5a3a08,0 0 18px rgba(232,184,58,.45),3px 3px 0 #2a1a04}
+.seal{position:absolute;right:0;top:-4px;width:clamp(26px,3.6vw,38px);background:#c8281c;color:#fbe6d8;font-size:clamp(13px,1.8vw,18px);font-weight:700;line-height:1.15;text-align:center;padding:5px 0;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px #5a0f08 inset;writing-mode:vertical-rl;letter-spacing:.1em}
+.win .seal{background:#b8861c;color:#2a1a04}
+.chips{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-size:clamp(12px,1.5vw,16px);color:#d9cba7;margin:0 0 6px}
+.chips i{font-style:normal;margin-right:4px}
+.chips .tag{border:1px solid #b8923f;padding:2px 14px;color:#f0d890;background:#2a2012;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%)}
+.badge{margin-left:auto;display:flex;align-items:center;gap:10px;cursor:pointer;color:#9c8a60;font-size:12px}
+.medal{width:clamp(84px,11vw,128px);aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 50% 35%,#f0d890,#b8923f 60%,#6b5426);border:3px solid #3a2a0c;box-shadow:0 0 0 2px #d8b25a inset,0 6px 20px #000;color:#3a1a08;font-weight:900;font-size:clamp(22px,3.2vw,36px);font-family:"STKaiti","KaiTi",serif;text-align:center;line-height:1}
+.medal small{display:block;font-size:.34em;font-weight:700;margin-top:4px;letter-spacing:.2em}
+.cards{display:grid;grid-template-columns:repeat(5,1fr) 1.5fr;gap:10px;margin:14px 0}
+.c{background:#161210;border:2px solid #3b3220;padding:10px 12px;position:relative;min-width:0}
+.c.hl{border-color:#e8a83a;box-shadow:0 0 12px rgba(232,168,58,.5)}
+.c b{display:block;font-weight:400;font-size:clamp(11px,1.3vw,14px);color:#bba97c}
+.c strong{display:block;font-size:clamp(20px,2.6vw,32px);color:#f4ead0;letter-spacing:.04em;margin-top:2px;font-variant-numeric:tabular-nums}
+.c em{position:absolute;right:10px;top:8px;font-style:normal;opacity:.7;font-size:16px}
+.bar{height:16px;background:#0a0807;border:1px solid #5a4824;margin-top:8px;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#e8bf5a,#b8861c)}
+.bar span{position:absolute;right:6px;top:-1px;font-size:12px;color:#fff;text-shadow:0 1px 0 #000}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pn{background:#13100e;border:2px solid #3b3220;padding:14px 16px;min-width:0}
+.pt{display:inline-block;border:1px solid #b8923f;padding:2px 18px;color:#f0d890;background:#2a2012;font-size:15px;margin-bottom:12px;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%)}
+.row{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}
+.lb{border:1px solid #6b5a30;padding:1px 8px;font-size:12px;color:#d8c690;min-width:42px;text-align:center}
+.ic{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid #5c4a8a;background:#1e1830;border-radius:3px}
+.ic.o{border-color:#8a5a2a;background:#2c1c10}.ic.g{border-color:#6a6a6a;background:#222}.ic.c{border-color:#2f6a6a;background:#102828}
+.attrs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;margin-top:10px;font-size:clamp(12px,1.5vw,15px)}
+.attrs div{white-space:nowrap}.attrs span{color:#a89a74;margin-right:4px;font-size:.9em}.attrs.dim .d{opacity:.45}
+.dm{max-height:292px;overflow:auto;padding-right:6px}
+.dr{display:flex;align-items:center;gap:8px;margin:6px 0}
+.dr .ic{flex:none;width:34px;height:34px;font-size:18px}
+.dr .bb{flex:1;height:22px;background:#0a0807;border:1px solid #5a4824;position:relative}
+.dr .bb i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#e8bf5a,#b8861c)}
+.dr .bb s{position:absolute;left:6px;top:1px;font-size:12px;color:#fff;text-decoration:none;text-shadow:0 1px 0 #000}
+.dr .bb u{position:absolute;right:6px;top:1px;font-size:12px;text-decoration:none;color:#fff;text-shadow:0 1px 0 #000;font-variant-numeric:tabular-nums}
+.tot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #4a3c1e;margin-top:8px;padding-top:8px;font-size:15px}.tot b{font-size:20px;color:#f4ead0}
+.foot{display:grid;grid-template-columns:1.6fr auto auto auto;gap:10px;margin-top:12px;align-items:stretch}
+.gain{background:#13100e;border:2px solid #3b3220;padding:12px 14px;display:flex;gap:12px;align-items:center;color:#a89a74;font-size:14px}
+button{font:inherit;color:#e8dcc0;background:#161210;border:2px solid #6b5426;padding:12px 22px;cursor:pointer;font-size:clamp(14px,1.8vw,18px);box-shadow:0 0 0 1px #000 inset}
+button:hover{background:#241c12;border-color:#b8923f}
+button.pri{background:linear-gradient(#d8b25a,#a07a2c);color:#2a1a04;font-weight:700;border-color:#f0d890;box-shadow:0 0 14px rgba(232,184,58,.5)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;border:1px solid #b8923f;padding:8px 18px;border-radius:6px;display:none;z-index:9}
+@media(max-width:820px){
+ .cards{grid-template-columns:repeat(3,1fr)}.cards .c:last-child{grid-column:1/-1}
+ .main{grid-template-columns:1fr}.foot{grid-template-columns:1fr 1fr}.gain{grid-column:1/-1}.foot .pri{grid-column:1/-1}
+ .badge{margin-left:0;width:100%;justify-content:flex-end}.head{min-height:0}
+ .attrs{grid-template-columns:repeat(4,1fr)}.dm{max-height:none}
+}
+</style></head><body>
+<div id="W"><div class="frame" id="F">
+ <div class="head">
+  <div class="ttl"><h1 id="T">兵败涿郡</h1><div class="seal" id="S" title="点击切换 胜/败 示例">败</div></div>
+  <div style="flex:1;min-width:240px">
+   <div class="chips"><span><i>☠</i>标准</span><span><i>🌾</i>农夫</span><span><i>⚔</i>军刀</span><span class="tag">无名小卒</span></div>
+  </div>
+  <div class="badge" id="B"><span>点击徽章查看评定详情</span><div class="medal" id="M">校尉<small>评 定</small></div></div>
+ </div>
+ <div class="cards">
+  <div class="c hl"><b>用时</b><strong>16:27</strong><em>⏳</em></div>
+  <div class="c"><b>斩首</b><strong>1,596</strong><em>🗡</em></div>
+  <div class="c"><b>缴获</b><strong>1,686</strong><em>💰</em></div>
+  <div class="c"><b>最高连斩</b><strong>312</strong><em>🔥</em></div>
+  <div class="c"><b>等级</b><strong>15</strong><em>🧘</em></div>
+  <div class="c"><b>波次进度</b><div class="bar" style="margin-top:12px"><i style="width:95%"></i><span>19/20</span></div></div>
+ </div>
+ <div class="main">
+  <div class="pn"><div class="pt">构筑详情</div>
+   <div class="row"><span class="lb">武艺</span><div class="ic o">⚔</div><div class="ic o">🔱</div><div class="ic o">🗡</div><div class="ic o">🏹</div><div class="ic o">🔥</div></div>
+   <div class="row"><span class="lb">天书</span><div class="ic">⚡</div><span class="lb">功法</span><div class="ic c">☯</div><div class="ic c">🛡</div><div class="ic c">🧘</div><span class="lb">身法</span><div class="ic g">👣</div></div>
+   <div class="row"><span class="lb">行囊</span><div class="ic g">📜</div><div class="ic g">🍶</div><div class="ic g">🧣</div><div class="ic g">🪖</div><div class="ic g">📿</div><div class="ic g">🥁</div></div>
+   <div class="row" style="margin-top:14px"><span class="lb">熟练</span></div>
+   <div class="attrs dim">
+    <div><span>体魄</span>49</div><div><span>短兵</span>56</div><div><span>长兵</span>2</div><div><span>射艺</span>6</div>
+    <div class="d"><span>骑术</span>0</div><div><span>身法</span>21</div><div><span>智谋</span>9</div><div><span>运气</span>11</div>
+   </div>
+  </div>
+  <div class="pn"><div class="pt">伤害统计</div>
+   <div class="dm" id="D"></div>
+   <div class="tot"><span class="lb">总计</span><b id="TT"></b></div>
+  </div>
+ </div>
+ <div class="foot">
+  <div class="gain"><span class="lb">败因</span><span>阵亡于第 19 波 · 倒在黄巾力士的刀下（本作无局外成长，只留一场战报）</span></div>
+  <button onclick="t('查看战报：样板')">查看战报</button>
+  <button onclick="t('返回主菜单：样板')">返回主菜单</button>
+  <button class="pri" onclick="t('再来一局：样板')">再来一局</button>
+ </div>
+</div></div>
+<div id="toast"></div>
+<script>
+const data=[['⚔','剑气',49678],['🏹','箭雨',29691],['🔱','枪刺',23896],['🔥','火攻',23812],['🗡','飞刀',22916],['🌀','旋风斩',19474],['⚡','霹雳',14200],['🔨','震地',9100],['☯','刀轮',6400],['🐎','冲锋',3200]];
+const tot=data.reduce((a,b)=>a+b[2],0),mx=data[0][2];
+document.getElementById('D').innerHTML=data.map(d=>'<div class="dr"><div class="ic o">'+d[0]+'</div><div class="bb"><i style="width:'+(d[2]/mx*100)+'%"></i><s>'+d[1]+' '+(d[2]/tot*100).toFixed(1)+'%</s><u>'+d[2].toLocaleString()+'</u></div></div>').join('');
+document.getElementById('TT').textContent=tot.toLocaleString();
+const ts=document.getElementById('toast');function t(m){ts.textContent=m;ts.style.display='block';clearTimeout(t.k);t.k=setTimeout(()=>ts.style.display='none',1400);}
+let win=false;document.getElementById('S').onclick=()=>{win=!win;F.classList.toggle('win',win);T.textContent=win?'大破黄巾':'兵败涿郡';S.textContent=win?'胜':'败';};
+document.getElementById('B').onclick=()=>t('评定：按波次、斩首、用时综合 → 校尉（样板）');
+</script></body></html>
