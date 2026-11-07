@@ -231,7 +231,7 @@ function bndR(){const kk=cv.height/VH,vw=cv.width/kk;return Math.max(520,vw*1.2)
 function spawn(type,rad,ang){
   if(ang==null&&Math.random()<0.6){const base=edgeO>0.05?edgeAng:(hero.moving?hero.fa:Math.random()*6.283);ang=base+(Math.random()-0.5)*2.4;}
   const a=ang==null?Math.random()*6.283:ang,r=rad==null?ringR()+Math.random()*60:rad;
-  enemies.push({type,x:hero.x+Math.cos(a)*r,y:hero.y+Math.sin(a)*r/SQ,hp:TYPES[type].hp,wk:Math.random()*6,fa:0});
+  enemies.push({type,x:hero.x+Math.cos(a)*r,y:hero.y+Math.sin(a)*r/SQ,hp:TYPES[type].boss?TYPES[type].hp:TYPES[type].hp*(1+HP_SCALE*Math.max(0,wave-1)),wk:Math.random()*6,fa:0});
 }
 function targetN(){const cap=innerWidth<innerHeight||innerWidth<700?100:150;const row=waveRow();return Math.min(N,cap,row.n+Math.max(0,wave-WAVE_TABLE.length)*14);}
 for(let i=0;i<70;i++)spawn(pickType(),90+Math.random()*(ringR()*1.1));
