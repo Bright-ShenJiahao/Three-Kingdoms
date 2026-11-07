@@ -521,16 +521,16 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
 const HJ=META.hj,HK=0.3;const hjc=document.createElement('canvas');hjc.width=hjc.height=HJ.cell;const hjx=hjc.getContext('2d');
-function drawHJ(col,row,x,y,sc,mir,alpha,flash,red){const cw=HJ.cell;ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);
+function drawHJ(col,row,x,y,sc,mir,alpha,flash,red,lean){const cw=HJ.cell;ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(mir)ctx.scale(-1,1);if(lean)ctx.rotate(lean);
   let src=IMG.hj_atlas,a=col*cw,b=row*cw;
   if(flash||red){hjx.clearRect(0,0,cw,cw);hjx.globalCompositeOperation='source-over';hjx.drawImage(IMG.hj_atlas,a,b,cw,cw,0,0,cw,cw);hjx.globalCompositeOperation='source-atop';hjx.fillStyle=flash?'rgba(255,255,255,.85)':'rgba(255,40,30,'+red+')';hjx.fillRect(0,0,cw,cw);src=hjc;a=0;b=0;}
   ctx.drawImage(src,a,b,cw,cw,-cw/2*HK*sc,-HJ.base*HK*sc,cw*HK*sc,cw*HK*sc);ctx.restore();}
-function drawEnemyHJ(e,T,ey,fd){const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let col,yo=0,red=0;
+function drawEnemyHJ(e,T,ey,fd){const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let col,yo=0,red=0,lean=0;
   if(e.atk){const k=e.atk.t/e.atk.dur;col=k<0.5?6:7;if(k>0.55)red=Math.min(.45,(k-.55)*1.2);}
   else if(e.strikeT>0)col=e.strikeT>0.11?8:9;
   else if(e.hitT>0)col=10;
-  else{const w=Math.floor(Math.abs(e.wk)*0.55)%6;col=w;}
-  drawEA_HJ(col,di,e.x,ey+yo,T.sc*S,fl<0,fd<1?fd:null,e.flashT>0,red);}
+  else{col=[0,1,3,4][Math.floor(Math.abs(e.wk)*0.7)%4];lean=(di===0?0.2:(di===1||di===3)?0.12:0);}
+  drawHJ(col,di,e.x,ey+yo,T.sc*S,fl<0,fd<1?fd:null,e.flashT>0,red,lean);}
 function drawEA_HJ(c,r,x,y,sc,m,al,f,red){drawHJ(c,r,x,y,sc,m,al,f,red);}
 function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;const fd=retreatT>0?Math.max(.02,retreatT/RT):1;
   if(T.hj){drawEnemyHJ(e,T,ey,fd);return;}

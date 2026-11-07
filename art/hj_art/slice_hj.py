@@ -45,7 +45,6 @@ for r in range(5):
         sub[...,1]=np.minimum(sub[...,1],mx)
         rgba=np.zeros(m.shape+(4,),np.uint8);rgba[...,:3]=np.clip(sub,0,255);rgba[...,3]=m*255
         t=Image.fromarray(rgba)
-        if k<=10: fy=RG-y0
         ox=round(CELL/2-cx);oy=round(BASE-fy)
         assert ox>=0 and oy>=0 and ox+t.width<=CELL and oy+t.height<=CELL,(r,k,ox,oy,t.size)
         atlas.alpha_composite(t,(k*CELL+ox,r*CELL+oy))
