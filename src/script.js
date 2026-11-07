@@ -5,7 +5,6 @@ const WAVES=8, WAVE_TIME=60;
 const TYPES={
  spara:{w:70,sp:52,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:.5,dmg:4,ac:1.6,ring:0,mk:null},
  archer:{w:20,sp:40,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:.8,dmg:5,ac:2.8,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
- oldh:{w:14,sp:60,r:10,hp:2,nm:'spara',oldh:1,sc:1,reach:30,ar:34,aw:.5,dmg:5,ac:1.7,ring:0,mk:null},
  pers:{w:15,sp:58,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:.5,dmg:5,ac:1.6,ring:0,mk:null},
  pcav:{w:8,sp:95,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:.45,dmg:8,ac:2.0,ring:0,kbm:.5,mk:'#c46bff'},
  comp:{w:6,sp:82,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:.5,dmg:10,ac:2.2,ring:0,kbm:.4,mk:'#ff9a3a'},
@@ -18,7 +17,7 @@ function pickType(){const w=wave;let t=[['spara',100]];
   if(w==2)t=[['spara',80],['archer',20]];else if(w==3)t=[['spara',60],['archer',20],['immortal',20]];
   else if(w>=4)t=[['spara',w>=5?40:50],['archer',w>=5?25:20],['immortal',w>=5?25:20]];
   if(w>=4){let n=0;for(const e of enemies)if(e.type=='brute2')n++;if(n<1+Math.floor((w-4)/2)&&Math.random()<0.03)return 'brute2';}
-  t.push(['oldh',w==1?30:14]);t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
+  t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
   let sum=0;for(const x of t)sum+=x[1];let r=Math.random()*sum;for(const x of t){r-=x[1];if(r<=0)return x[0];}return 'spara';}
 const arrows=[];
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
@@ -420,22 +419,19 @@ function drawArt(T,x,y,fa,wk,sc,alpha,flash,rot){if(!isFinite(fa))fa=0;if(!isFin
   ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y-F.up*sc);if(fl<0)ctx.scale(-1,1);if(rot)ctx.rotate(rot);
   ctx.drawImage(im,-F.ax*sc,-F.h*sc,F.w*sc,F.h*sc);ctx.restore();}
 function drawEnemy(e,T,ey){if(!isFinite(e.fa))e.fa=0;if(!isFinite(e.wk))e.wk=0;
-  if(T.oldh){const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;drawHeroA(IMG.hero_old,AT2,ATN2,AK2,e.x,ey,e.fa,e.wk,T.sc*S,blink?0.55:null,e.atk?'raise':null,0,e.flashT>0);return;}
   if(T.art){const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;drawArt(T,e.x,ey,e.fa,e.atk?0:e.wk,T.sc*S,blink?0.55:null,e.flashT>0,0);return;}
   const [dn,fl]=H8[sect(e.fa)],di=DIRS5.indexOf(dn);let nm;
   if(e.atk)nm='raise_'+di;else if(e.strikeT>0)nm='strike_'+di;else if(e.hitT>0)nm='hit_'+di;else nm='walk_'+di+'_'+(Math.floor(Math.abs(e.wk))%6);
   const blink=e.atk&&e.atk.t/e.atk.dur>0.7&&Math.floor(tm*20)%2;
   drawEA(nm,e.x,ey,T.sc*S,fl,blink?0.55:null,e.flashT>0);}
-const AT=META.atlas,AK=0.25,ATN={};AT.names.forEach((n,i)=>ATN[n]=i);
-const AT2=META.oldatlas,AK2=0.168,ATN2={};AT2.names.forEach((n,i)=>ATN2[n]=i);
-function drawHeroA(img,A,NM,K,x,y,fa,wk,sc,alpha,pose,rot,flash){
+const AT=META.atlas,AK=0.168,ATN={};AT.names.forEach((n,i)=>ATN[n]=i);
+function drawHero(x,y,fa,wk,sc,alpha,pose){
   if(!isFinite(fa))fa=0;if(!isFinite(wk))wk=0;
   const [dn,fl]=H8[sect(fa)],di=DIRS5.indexOf(dn);
-  const n=NM[pose?pose+'_'+di:'walk_'+di+'_'+(Math.floor(Math.abs(wk))%6)],cw=A.cell,cols=A.cols;
-  ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;if(flash&&'filter' in ctx)ctx.filter='brightness(2.6)';ctx.translate(x,y);if(rot)ctx.rotate(rot);if(fl<0)ctx.scale(-1,1);
-  ctx.drawImage(img,(n%cols)*cw,Math.floor(n/cols)*cw,cw,cw,-cw/2*K*sc,-A.base*K*sc,cw*K*sc,cw*K*sc);ctx.restore();
+  const n=ATN[pose?pose+'_'+di:'walk_'+di+'_'+(Math.floor(Math.abs(wk))%6)],cw=AT.cell,cols=AT.cols;
+  ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;ctx.translate(x,y);if(fl<0)ctx.scale(-1,1);
+  ctx.drawImage(IMG.hero_atlas,(n%cols)*cw,Math.floor(n/cols)*cw,cw,cw,-cw/2*AK*sc,-AT.base*AK*sc,cw*AK*sc,cw*AK*sc);ctx.restore();
 }
-function drawHero(x,y,fa,wk,sc,alpha,pose){drawHeroA(IMG.hero_atlas,AT,ATN,AK,x,y,fa,wk,sc,alpha,pose,0,false);}
 let popPose='fore';
 
 function drawProp(p){
@@ -490,7 +486,6 @@ function draw(){
       if(T.mk){ctx.fillStyle=T.mk;ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.beginPath();ctx.arc(e.x,ey-38*T.sc*S,3.2*S,0,7);ctx.fill();ctx.stroke();}}
   }
   for(const c of corpses){const T=c.T,sc=T.sc*S,fly=c.t<0.3,al=c.t<0.6?1:Math.max(0,1-(c.t-0.6)/0.3);
-    if(T.oldh){drawHeroA(IMG.hero_old,AT2,ATN2,AK2,c.x,c.y*SQ,c.flip>0?0:Math.PI,0,sc,al,null,Math.min(1,c.t/0.3)*1.4*(c.flip>0?1:-1),false);continue;}
     if(T.art){drawArt(T,c.x,c.y*SQ,c.flip>0?0:Math.PI,0,sc,al,false,Math.min(1,c.t/0.3)*1.4*(c.flip>0?1:-1));continue;}
     ctx.save();ctx.translate(0,0);if(fly){drawEA('fly',c.x,c.y*SQ-Math.sin(c.t/0.3*Math.PI)*18-(1-c.t/0.3)*2,sc,c.flip,al);}else drawEA('dead',c.x,c.y*SQ,sc,c.flip,al);ctx.restore();}
   for(const p of slashes)drawCrescent(p);

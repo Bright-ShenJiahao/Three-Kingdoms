@@ -20,7 +20,7 @@ def newart(h):
     h=h[:i]+'const A='+_j.dumps(A,ensure_ascii=False)+h[j:]
     NEW="""const _HA=META.atlas,_EA=META.eatlas;
 function _at(im,J,k,name,x,y,sc,fl){const n=J.names.indexOf(name),cw=J.cell,c=J.cols;ctx.save();ctx.translate(x,y);if(fl)ctx.scale(-1,1);ctx.drawImage(im,(n%c)*cw,Math.floor(n/c)*cw,cw,cw,-cw/2*k*sc,-J.base*k*sc,cw*k*sc,cw*k*sc);ctx.restore()}
-function fh(nm_,dir,fi,x,y,sc,fl){const di=['E','SE','S','NE','N'].indexOf('E');if(nm_==='hw')_at(IMG.hero_atlas,_HA,0.25,'walk_0_'+(fi%6),x,y,sc*1.5,fl);else _at(IMG.enemy_atlas,_EA,30/216,'walk_0_'+(fi%6),x,y,sc*1.4,fl)}
+function fh(nm_,dir,fi,x,y,sc,fl){const di=['E','SE','S','NE','N'].indexOf('E');if(nm_==='hw')_at(IMG.hero_atlas,_HA,0.168,'walk_0_'+(fi%6),x,y,sc*1.5,fl);else _at(IMG.enemy_atlas,_EA,30/216,'walk_0_'+(fi%6),x,y,sc*1.4,fl)}
 """
     a=h.find('function fh(');b=h.find('\n',a)
     h=h[:a]+NEW+h[b+1:]
