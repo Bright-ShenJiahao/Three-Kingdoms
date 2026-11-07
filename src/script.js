@@ -17,7 +17,7 @@ function pickType(){const w=wave;let t=[['spara',100]];
   if(w==2)t=[['spara',80],['archer',20]];else if(w==3)t=[['spara',60],['archer',20],['immortal',20]];
   else if(w>=4)t=[['spara',w>=5?40:50],['archer',w>=5?25:20],['immortal',w>=5?25:20]];
   if(w>=4){let n=0;for(const e of enemies)if(e.type=='brute2')n++;if(n<1+Math.floor((w-4)/2)&&Math.random()<0.03)return 'brute2';}
-  if(w>=3)t.push(['pers',w>=5?15:10]);if(w>=4)t.push(['pcav',w>=6?10:6]);if(w>=6)t.push(['comp',6]);
+  t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
   let sum=0;for(const x of t)sum+=x[1];let r=Math.random()*sum;for(const x of t){r-=x[1];if(r<=0)return x[0];}return 'spara';}
 const arrows=[];
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
@@ -497,7 +497,7 @@ function draw(){
   {const bi=$('bars').querySelector('i'),bb=$('bars').querySelector('b');bi.style.width=(hero.hp/hero.maxhp*100)+'%';bb.textContent=Math.ceil(hero.hp)+' / '+hero.maxhp;}
   if(wind&&!hero.dash){const k=wind.t/wind.dur,hx=hero.x,hy=hero.y*SQ-52*S;ctx.save();ctx.lineWidth=3*S;ctx.strokeStyle='rgba(255,230,140,.95)';ctx.shadowColor='#fc6';ctx.shadowBlur=8;ctx.beginPath();ctx.arc(hx,hy,13*S,-1.57,-1.57+6.283*k);ctx.stroke();ctx.shadowBlur=0;ctx.font=(15*S)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.6+0.4*k;ctx.fillText(wind.k.g,hx,hy);ctx.restore();}
   for(const f of effects){const a=1-f.t/0.18;const ang=Math.atan2(f.dy,f.dx);ctx.strokeStyle='rgba(235,248,255,'+a+')';ctx.lineWidth=3.2*S;ctx.lineCap='round';ctx.beginPath();ctx.arc(f.x,f.y*SQ-22*S,24*S,ang-1.0,ang+1.0);ctx.stroke();}
-  $('info').textContent='窗口 '+stage.clientWidth+'×'+stage.clientHeight+'\n视野 '+Math.round(vw)+'×'+Math.round(vwy)+'（世界单位）\n步兵占屏高 1/'+(VH/(32*S)).toFixed(1)+'；步行主角 1/'+(VH/(META.hw.frames[2][0].h*S)).toFixed(1)+'\n压扁 '+SQ.toFixed(2)+'  敌人 '+enemies.length+'  地块 '+chunks.size;
+  $('info').textContent='窗口 '+stage.clientWidth+'×'+stage.clientHeight+'\n视野 '+Math.round(vw)+'×'+Math.round(vwy)+'（世界单位）\n步兵占屏高 1/'+(VH/(32*S)).toFixed(1)+'；步行主角 1/'+(VH/(48*S)).toFixed(1)+'\n压扁 '+SQ.toFixed(2)+'  敌人 '+enemies.length+'  地块 '+chunks.size;
   $('vS').textContent=S.toFixed(2);$('vQ').textContent=SQ.toFixed(2);dashBtn.style.setProperty('--p',((1-dashCd/DCD)*360)+'deg');dashBtn.classList.toggle('rdy',dashCd<=0);
   $('koN').textContent=kills;$('cbN').textContent=combo;
   const wl=Math.max(0,WAVE_TIME-waveT);
