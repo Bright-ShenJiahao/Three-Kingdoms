@@ -22,15 +22,17 @@ function makeBGM(ac,dest,NBUF){
     boss:{bpm:124,bars:32,war:3,lv:{drum:.94,pluck:.23,tone:.2},drone:{midi:33,level:.055},drums:warDrums,
       drumArr:'egfhegfheffhggfh'+'egfhegfhegfheghh',ph:WAR_PH,melArr:warMelody,tones:{0:[3,3],8:[2,3],16:[3,3],24:[5,3]}}};
   for(const k in TR){const T=TR[k];T.melMap=new Map();for(let bar=0;bar<T.bars;bar++)for(const [st,d,vel,dur] of T.ph[T.melArr[bar]]||[])T.melMap.set(bar*16+st,[d,vel,dur]);}
-  const out=ac.createGain();out.gain.value=.8;out.connect(dest);
-  let duckV=1;const master=ac.createGain();master.gain.value=1;master.connect(out);
+  const out=ac.createGain();out.gain.value=.7;
+  const rv=ac.createConvolver();{const n=ac.sampleRate*1.8,b=ac.createBuffer(2,n,ac.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);}rv.buffer=b;}
+  const rvg=ac.createGain();rvg.gain.value=.16;rv.connect(rvg);rvg.connect(out);const lim=ac.createDynamicsCompressor();lim.threshold.value=-16;lim.knee.value=8;lim.ratio.value=12;lim.attack.value=.003;lim.release.value=.2;out.connect(lim);lim.connect(dest);
+  let duckV=1;const master=ac.createGain();master.gain.value=1;master.connect(out);master.connect(rv);
   const osc=(type,f,t)=>{const o=ac.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);return o;};
   const noiseSrc=()=>{const s=ac.createBufferSource();s.buffer=NBUF;s.loop=true;return s;};
   let drumBuf=null;
   const ready=(()=>{try{const u='__DRUM__';const bytes=Uint8Array.from(atob(u),c=>c.charCodeAt(0)).buffer;return ac.decodeAudioData(bytes).then(b=>{drumBuf=b;}).catch(()=>{});}catch(e){return Promise.resolve();}})();
-  function warDrum(t,kind,vel,dest){if(!drumBuf)return;const edge=kind==='tom'||kind==='snare';
-    const s=ac.createBufferSource();s.buffer=drumBuf;s.playbackRate.value=(edge?1.16:1)*(1+(Math.random()-.5)*.025);
-    const f=ac.createBiquadFilter();f.type=edge?'highpass':'lowpass';f.frequency.value=edge?140:2200;
+  function warDrum(t,kind,vel,dest,rate,lpf){if(!drumBuf)return;const edge=kind==='tom'||kind==='snare';
+    const s=ac.createBufferSource();s.buffer=drumBuf;s.playbackRate.value=(rate||(edge?1.16:1))*(1+(Math.random()-.5)*.025);
+    const f=ac.createBiquadFilter();f.type=edge?'highpass':'lowpass';f.frequency.value=edge?140:(lpf||2200);
     const g=ac.createGain();g.gain.value=vel*(edge?.58:1.15);s.connect(f).connect(g).connect(dest);s.start(t);s.stop(t+drumBuf.duration+.05);}
   function pluck(t,midi,vel,dest,dur){dur=dur||.7;if(!(vel>0))return;const f=m2f(midi);
     const g=ac.createGain();g.connect(dest);const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=.7;
@@ -52,8 +54,22 @@ function makeBGM(ac,dest,NBUF){
     for(const d of [-5,5]){const o=osc('triangle',m2f(midi),t);o.detune.value=d;o.connect(f);o.start(t);o.stop(t+dur+.05);}}
   // 铜锣（鸣金）
   function gong(t,vol){[1,1.47,2.09,2.56,3.4].forEach((m,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=150*m;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime((vol||.22)/(1+i*.7),t+.01);g.gain.exponentialRampToValueAtTime(.0005,t+2.6-i*.3);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.8);});}
+  let V=1;
   function playStep(L,bar,st,t){const T=L.track,dp=T.drums[T.drumArr[bar]];
-    if(dp){const c=dp[st];if(c&&c!=='.'){const d=DRUM[c];if(d)warDrum(t,d[0],d[1]*T.lv.drum,L.gain);}}
+    if(dp){const c=dp[st];if(c&&c!=='.'){const d=DRUM[c];if(d){warDrum(t,d[0],d[1]*T.lv.drum,L.gain);
+      // 大气版：重鼓叠一层更低更厚的“闷雷”，次重鼓叠高八度鼓边
+      if(V===2&&d[0]==='kick'&&d[1]>=.5)warDrum(t,'kick',d[1]*T.lv.drum*.8,L.gain,.74,900);
+      if(V===2&&d[0]==='kick'&&d[1]>=.78)warDrum(t+.045,'kick',d[1]*T.lv.drum*.45,L.gain,.6,600);}}}
+    if(V===2){const rt=[0,0,3,2][Math.floor(bar/4)%4];
+      // 厚重和声垫：根音+五度，持续一小节
+      if(st===0&&T.war>1){longTone(t,dn(rt)+12,16*L.spb*.95,.11,L.gain);longTone(t,dn(rt+2)+12,16*L.spb*.95,.08,L.gain);longTone(t,dn(rt)-12,16*L.spb*.95,.13,L.gain);}
+      // 每8小节开头一记大锣 + 号角长音
+      if(st===0&&bar%8===0&&T.war>1){gong(t,.22);warVoice(t,dn(rt)+12,1.6,.1,L.gain,true);warVoice(t,dn(rt+2)+12,1.6,.07,L.gain,true);}
+      // 旋律叠号角（高八度拨弦 + 同音短号）
+      const ev2=T.melMap.get(bar*16+st);
+      if(ev2&&T.war>1){warVoice(t,dn(ev2[0]),.5,.1,L.gain,true);pluck(t,dn(ev2[0])+12,(ev2[1]||.34)*T.lv.pluck*.7,L.gain,.9);}
+      // 每拍加一记鼓边“哒”增加行军劲头
+      if(T.war>1&&st%4===2&&dp&&dp[st]==='.')warDrum(t,'tom',.22*T.lv.drum,L.gain);}
     const ev=T.melMap.get(bar*16+st);
     if(ev&&(bar%2===0||(T.war>1&&st===0)))pluck(t,dn(ev[0]),(ev[1]||.34)*T.lv.pluck,L.gain,ev[2]||1);
     if(st===0&&T.tones&&T.tones[bar]){const [d,b]=T.tones[bar];longTone(t,dn(d),b*60/T.bpm,T.lv.tone,L.gain);}
@@ -77,7 +93,7 @@ function makeBGM(ac,dest,NBUF){
     start(){if(on)return;on=true;timer=setInterval(pump,90);pump();},
     resume(){this.start();},
     stop(){if(!on)return;on=false;clearInterval(timer);for(const l of layers)stopLayer(l);cur='';},
-    setLevel(){},boss(b){bossOn=!!b;},
+    setLevel(){},ver(v){V=v===2?2:1;},getVer(){return V;},boss(b){bossOn=!!b;},
     gong(){gong(ac.currentTime+.02,.26);},
     duck(v){paused=v<.9;master.gain.setTargetAtTime(v,ac.currentTime,.25);},
     // 离线渲染：直接排程 secs 秒

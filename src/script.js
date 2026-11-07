@@ -252,7 +252,10 @@ setInterval(()=>{const a=AC;if(!a||typeof started==='undefined'||!started)return
   BGMo.resume&&BGMo.resume();
   if(wave!==bgmWave){if(bgmWave>0&&wave>bgmWave)BGMo.gong();bgmWave=wave;BGMo.setLevel(1+Math.floor((wave-1)/2));}
   if(bossPhase!==bgmBoss){bgmBoss=bossPhase;BGMo.boss(bossPhase);}
-  BGMo.duck(paused?.35:1);},300);
+  BGMo.duck(paused?.35:1);
+  if(!window.__bgmV){window.__bgmV=1;const b=document.createElement('div');b.style.cssText='position:fixed;right:8px;top:8px;z-index:99;padding:4px 10px;background:#000a;color:#e8d9a8;border:1px solid #8a7440;font:14px sans-serif;cursor:pointer;user-select:none';
+    const set=v=>{BGMo.ver(v);b.textContent='配乐 '+(v===2?'B 大气版':'A 旌旗北望')+'（点我/M键切换）';};set(2);
+    b.onclick=()=>set(BGMo.getVer()===2?1:2);addEventListener('keydown',e=>{if(e.code==='KeyM')b.onclick();});document.body.appendChild(b);}},300);
 function sfx(k){const a=acx();if(!a)return;const now=a.currentTime,lim={hit:0.045,kill:0.06,hurt:0.12,dash:0.1,swing:0.12,shield:0.06,arrow:0.1};if(now-(sfxT[k]||-9)<(lim[k]||0.05))return;sfxT[k]=now;
  const g=a.createGain();g.connect(a.destination);
  const noise=(dur,f0,f1,q,vol,type)=>{const s=a.createBufferSource();s.buffer=NB;s.playbackRate.value=0.8+Math.random()*0.4;const f=a.createBiquadFilter();f.type=type||'bandpass';f.Q.value=q;f.frequency.setValueAtTime(f0,now);f.frequency.exponentialRampToValueAtTime(f1,now+dur);const v=a.createGain();v.gain.setValueAtTime(vol,now);v.gain.exponentialRampToValueAtTime(0.001,now+dur);s.connect(f);f.connect(v);v.connect(g);s.start(now);s.stop(now+dur+0.02);};
@@ -443,7 +446,7 @@ function update(dt){
     if(p.t>0.9*RP)slashes.splice(i,1);}
   for(let i=effects.length-1;i>=0;i--){effects[i].t+=dt;if(effects[i].t>0.18)effects.splice(i,1);}
   for(let i=ghosts.length-1;i>=0;i--){ghosts[i].a-=dt*3.2;if(ghosts[i].a<=0)ghosts.splice(i,1);}
-  for(let i=corpses.length-1;i>=0;i--){const c=corpses[i];c.t+=dt;c.x+=c.vx*dt;c.y+=c.vy*dt;c.vx*=0.96;if(c.t>0.9)corpses.splice(i,1);}
+  for(let i=corpses.length-1;i>=0;i--){const c=corpses[i];c.t+=dt;c.x+=c.vx*dt;c.y+=c.vy*dt;const kk=Math.exp(-14*dt);c.vx*=kk;c.vy*=kk;if(c.t>0.7)corpses.splice(i,1);}
   comboT-=dt;if(comboT<=0)combo=0;
   // 补兵：低于目标数就在视野外补
   let cnt=0;for(const e of enemies)if(!TYPES[e.type].boss)cnt++;
@@ -544,7 +547,7 @@ function draw(){
     else{const e=it.e,T=TYPES[e.type];if(e.x<x0-60||e.x>x0+vw+60||e.y<y0-60||e.y>y0+vwy+80)continue;const ey=e.y*SQ;shadow(e.x,ey,T.r*0.9*S,T.r*0.4*S);drawEnemy(e,T,ey);
       if(T.mk){ctx.fillStyle=T.mk;ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.beginPath();ctx.arc(e.x,ey-38*T.sc*S,3.2*S,0,7);ctx.fill();ctx.stroke();}}
   }
-  for(const c of corpses){const T=c.T,sc=T.sc*S,fly=c.t<0.3,al=c.t<0.6?1:Math.max(0,1-(c.t-0.6)/0.3);
+  for(const c of corpses){const T=c.T,sc=T.sc*S,fly=c.t<0.22,al=c.t<0.45?1:Math.max(0,1-(c.t-0.45)/0.25);
     if(T.art){drawArt(T,c.x,c.y*SQ,c.flip>0?0:Math.PI,0,sc,al,false,Math.min(1,c.t/0.3)*1.4*(c.flip>0?1:-1));continue;}
     ctx.save();ctx.translate(0,0);if(fly){drawEA('fly',c.x,c.y*SQ-Math.sin(c.t/0.3*Math.PI)*18-(1-c.t/0.3)*2,sc,c.flip,al);}else drawEA('dead',c.x,c.y*SQ,sc,c.flip,al);ctx.restore();}
   for(const p of slashes)drawCrescent(p);
