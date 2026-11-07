@@ -2,23 +2,22 @@ const ASSETS = __ASSETS__;
 (async function(){
 const VH=640;                 // 视野高度（世界单位）；步兵 32 高 → 约占屏高 1/20
 const WAVES=8, WAVE_TIME=60;
-const TYPES={
- spara:{w:70,sp:52,r:10,hp:1,nm:'spara',sc:1,reach:26,ar:30,aw:.5,dmg:4,ac:1.6,ring:0,mk:null},
- archer:{w:20,sp:40,r:10,hp:1,nm:'spara',sc:1,reach:0,ar:0,aw:.8,dmg:5,ac:2.8,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
- pers:{w:15,sp:58,r:10,hp:2,nm:'spara',art:'spara',nf:6,sc:1.15,reach:34,ar:38,aw:.5,dmg:5,ac:1.6,ring:0,mk:null},
- pcav:{w:8,sp:95,r:15,hp:4,nm:'pcav8',art:'pcav8',nf:8,sc:0.85,reach:38,ar:42,aw:.45,dmg:8,ac:2.0,ring:0,kbm:.5,mk:null},
- comp:{w:6,sp:82,r:15,hp:6,nm:'comp8',art:'comp8',nf:8,sc:0.85,reach:38,ar:42,aw:.5,dmg:10,ac:2.2,ring:0,kbm:.4,mk:null},
- immortal:{w:22,sp:36,r:12,hp:6,nm:'immortal',art:'immortal',nf:6,sc:1.1,reach:30,ar:34,aw:.6,dmg:6,ac:2.0,ring:0,kbm:.3,mk:'#6ab4ff'},
- brute2:{w:5,sp:26,r:18,hp:20,nm:'immortal',sc:1.5,reach:64,ar:70,aw:1.0,dmg:14,ac:2.6,ring:1,kbm:.4,mk:'#ff5a4a'},
- brute:{boss:1,sp:28,r:20,hp:30,nm:'immortal',sc:1.7,reach:52,ar:74,aw:.9,dmg:16,ac:2.4,ring:1}
-};
+/*__DATA__*/
 let wave=1;
-function pickType(){const w=wave;let t=[['spara',100]];
-  if(w==2)t=[['spara',80],['archer',20]];else if(w==3)t=[['spara',60],['archer',20],['immortal',20]];
-  else if(w>=4)t=[['spara',w>=5?40:50],['archer',w>=5?25:20],['immortal',w>=5?25:20]];
-  if(w>=4){let n=0;for(const e of enemies)if(e.type=='brute2')n++;if(n<1+Math.floor((w-4)/2)&&Math.random()<0.03)return 'brute2';}
-  t.push(['pers',w>=5?15:12]);t.push(['pcav',w>=6?10:w>=2?7:5]);if(w>=2)t.push(['comp',w>=6?6:4]);
-  let sum=0;for(const x of t)sum+=x[1];let r=Math.random()*sum;for(const x of t){r-=x[1];if(r<=0)return x[0];}return 'spara';}
+function waveRow(){return WAVE_TABLE[Math.min(wave,WAVE_TABLE.length)-1]||WAVE_TABLE[0];}
+function pickType(){const row=waveRow();
+  if(row.b2){let n=0;for(const e of enemies)if(e.type=='brute2')n++;if(n<row.b2&&Math.random()<0.03)return 'brute2';}
+  let sum=0;for(const k in row.mix)sum+=row.mix[k];let r=Math.random()*sum;for(const k in row.mix){r-=row.mix[k];if(r<=0)return k;}return 'spara';}
+// 声明式效果 → 数值
+function applyFx(fx){if(!fx)return;
+  if(fx.maxhp){hero.maxhp=Math.round(hero.maxhp*fx.maxhp);hero.hp=hero.maxhp;}
+  if(fx.maxhpAdd){const a=fx.maxhpAdd;hero.maxhp=a<0?Math.max(30,hero.maxhp+a):hero.maxhp+a;hero.hp=a<0?Math.min(hero.hp,hero.maxhp):hero.hp+a;}
+  if(fx.spd)spdMul*=fx.spd;if(fx.take)takeMul*=fx.take;if(fx.all)allMul*=fx.all;if(fx.dcd)DCD*=fx.dcd;
+  if(fx.ranged)rangedMul*=fx.ranged;if(fx.melee)meleeMul*=fx.melee;if(fx.cb)cbOn=true;if(fx.rg)rgOn=true;
+  if(fx.heal&&fx.cb)healMul=fx.heal;
+  else if(fx.heal)hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*fx.heal));
+  if(fx.hurt)hero.hp=Math.max(1,hero.hp-Math.round(hero.maxhp*fx.hurt));
+  if(fx.gamble)applyFx(fx.gamble[Math.random()<.5?0:1]);}
 const arrows=[];
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
 const IMG={};for(const k in ASSETS.img)IMG[k]=await loadImg(ASSETS.img[k]);
@@ -149,25 +148,8 @@ function playStory(lines,done){let i=0,typing=false,tm2=null,full='';
   const key=e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv();}};
   dlg.style.display='block';dlg.onclick=adv;addEventListener('keydown',key);window.__story={skip:fin};show();}
 // --- 随机事件（图2样式：左大立绘 + 右侧面板 + 三个选项，带得失提示）---
-const EVENTS=[
- {id:'nongfu',w:'乡民',t:'路遇老农',d:'一位老农拦在路边，说家里的粮被黄巾抢光了，求你分一点口粮。',o:[
-   {t:'分他半袋干粮',h:'失 最大生命-6　得 伤害+4%',f(){hero.maxhp=Math.max(30,hero.maxhp-6);hero.hp=Math.min(hero.hp,hero.maxhp);allMul*=1.04;}},
-   {t:'给他指条路，自己赶路',h:'得 回复15%生命',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.15));}},
-   {t:'视而不见',h:'无事发生',f(){}}]},
- {id:'qi',w:'老兵',t:'残破的战旗',d:'官军老兵倒在一面残旗旁，把旗杆塞进你手里：“替我，把它立起来。”',o:[
-   {t:'扛起战旗',h:'得 受到伤害-8%　失 移速-4%',f(){takeMul*=.92;spdMul*=.96;}},
-   {t:'扯下旗布裹伤',h:'得 回复25%生命',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.25));}},
-   {t:'默默离开',h:'无事发生',f(){}}]},
- {id:'tiejiang',w:'铁匠',t:'着火的铁匠铺',d:'铁匠铺燃起大火，铁匠在抢救一炉刚打好的刀，喊你搭把手。',o:[
-   {t:'冲进去帮忙救火',h:'失 当前生命-15%　得 伤害+8%',f(){hero.hp=Math.max(1,hero.hp-Math.round(hero.maxhp*.15));allMul*=1.08;}},
-   {t:'讨一块磨刀石',h:'得 闪身冷却-8%',f(){DCD*=.92;}},
-   {t:'不管，快走',h:'无事发生',f(){}}]},
- {id:'langzhong',w:'郎中',t:'游方郎中',d:'一个背着药箱的郎中拉住你，说他的药酒能强筋健骨，只是……药性烈。',o:[
-   {t:'买一副汤药',h:'得 回复40%生命　失 伤害-4%',f(){hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(hero.maxhp*.4));allMul*=.96;}},
-   {t:'赌一碗药酒',h:'一半一半：最大生命+15，或当前生命-20%',f(){if(Math.random()<.5){hero.maxhp+=15;hero.hp+=15;}else hero.hp=Math.max(1,hero.hp-Math.round(hero.maxhp*.2));}},
-   {t:'婉拒',h:'无事发生',f(){}}]}];
-const EV_WAVES=[2,5];let evUsed={};
-function tryEvent(done){if(EV_WAVES.indexOf(wave)<0||evUsed[wave])return false;evUsed[wave]=1;
+let evUsed={};
+function tryEvent(done){if(!waveRow().ev||evUsed[wave])return false;evUsed[wave]=1;
   const pool=EVENTS.filter(e=>!evUsed[e.id]);if(!pool.length)return false;const ev=pool[Math.floor(Math.random()*pool.length)];evUsed[ev.id]=1;
   let chosen=false;
   dlg.innerHTML=bigPortrait(ev.w)+'<div style="position:absolute;right:calc(var(--u)*30);top:calc(var(--u)*60);width:calc(var(--u)*560);background:#14120f;border:calc(var(--u)*3) solid '+GOLD+';padding:calc(var(--u)*34) calc(var(--u)*30) calc(var(--u)*26)"><div style="position:absolute;left:50%;top:calc(var(--u)*-26);transform:translateX(-50%);background:#2a2114;border:calc(var(--u)*3) solid '+GOLD+';padding:calc(var(--u)*4) calc(var(--u)*34);font-size:calc(var(--u)*26);font-weight:700;white-space:nowrap">'+ev.t+'</div><div style="font-size:calc(var(--u)*22);line-height:1.6;margin-bottom:calc(var(--u)*22)">'+ev.d+'</div><div id="evO"></div><div id="evR" style="margin-top:calc(var(--u)*10);min-height:calc(var(--u)*26);font-size:calc(var(--u)*20);color:#9fe08a;text-align:center"></div></div>';
@@ -176,7 +158,7 @@ function tryEvent(done){if(EV_WAVES.indexOf(wave)<0||evUsed[wave])return false;e
     b.innerHTML='<div style="font-size:calc(var(--u)*24)">'+(k+1)+'　'+o.t+'</div><div style="font-size:calc(var(--u)*16);color:#bfae82;margin-top:calc(var(--u)*4)">'+o.h+'</div>';
     b.onmouseenter=()=>{b.style.background='#5a4214';b.style.borderColor='#d9b25a'};b.onmouseleave=()=>{b.style.background='#241d12';b.style.borderColor='#6b5426'};
     b.onclick=()=>pick(k);box.appendChild(b);});
-  function pick(k){if(chosen)return;chosen=true;ev.o[k].f();removeEventListener('keydown',kk);$('evR').textContent=ev.o[k].h==='无事发生'?'你没有多做停留。':ev.o[k].h;setTimeout(()=>{dlg.style.display='none';done();},1100);}
+  function pick(k){if(chosen)return;chosen=true;applyFx(ev.o[k].fx);removeEventListener('keydown',kk);$('evR').textContent=ev.o[k].h==='无事发生'?'你没有多做停留。':ev.o[k].h;setTimeout(()=>{dlg.style.display='none';done();},1100);}
   const kk=e=>{const n={Digit1:0,Digit2:1,Digit3:2}[e.code];if(n!=null&&n<ev.o.length)pick(n);};addEventListener('keydown',kk);
   window.__event={pick};return true;}
 
@@ -210,7 +192,7 @@ function spawn(type,rad,ang){
   const a=ang==null?Math.random()*6.283:ang,r=rad==null?ringR()+Math.random()*60:rad;
   enemies.push({type,x:hero.x+Math.cos(a)*r,y:hero.y+Math.sin(a)*r/SQ,hp:TYPES[type].hp,wk:Math.random()*6,fa:0});
 }
-function targetN(){const cap=innerWidth<innerHeight||innerWidth<700?100:150;return Math.min(N,cap,Math.round(60+wave*14));}
+function targetN(){const cap=innerWidth<innerHeight||innerWidth<700?100:150;const row=waveRow();return Math.min(N,cap,row.n+Math.max(0,wave-WAVE_TABLE.length)*14);}
 for(let i=0;i<70;i++)spawn(pickType(),90+Math.random()*(ringR()*1.1));
 function setN(v){N=v;$('vN').textContent=v;}setN(250);
 $('gear').onclick=()=>$('panel').classList.toggle('open');
@@ -283,15 +265,8 @@ const TITLES={wanren:{n:'万人敌',up:'周围每有1名敌人，伤害+4%（上
  shenshe:{n:'神射',up:'射艺类伤害+30%',dn:'近战类伤害-20%',cond:'单局击杀弓手 15 名'}};
 function applyTitle(id){const m={wanren(){crowdMul=true;DCD=1.8},tiebi(){takeMul=.7;spdMul=.85},jifeng(){spdMul=1.15;DCD=0.63;hero.maxhp=90;hero.hp=90},zhanjiang(){bigMul=1.4;smallMul=.85},pojun(){allMul=1.15;takeMul=1.25},shenshe(){rangedMul=1.3;meleeMul=.8}};if(m[id])m[id]();}
 function titleMul(e){let m=allMul*moraleMul;if(cbOn&&cbT>0)m*=1.2;if(rgOn&&rgT>0)m*=1.25;if(crowdMul){m*=1+Math.min(.4,nearest(40,150).length*.04)}const big=(e.type==='brute'||e.type==='brute2');m*=big?bigMul:smallMul;if(curK){const c=CAT[curK.id];if(c==='射艺')m*=rangedMul;else if(c==='短兵'||c==='长兵')m*=meleeMul;}return m;}
-const FAC={xiangyong:{n:'普通乡勇',up:'无',dn:'无'},
- guanjun:{n:'官军',up:'最大生命+15%',dn:'移速-8%',cond:'携官军技能（枪刺/震地）通关',tags:['qiang','zhendi'],f(){hero.maxhp=Math.round(hero.maxhp*1.15);hero.hp=hero.maxhp;spdMul*=.92}},
- liubei:{n:'刘备义军',up:'受到伤害-12%',dn:'自己伤害-6%',tags:['lianzhan','jian'],f(){takeMul*=.88;allMul*=.94}},
- caocao:{n:'曹操',up:'击杀后2秒内伤害+20%',dn:'波间回血减半',cond:'携曹操技能（横扫千军/刀轮）通关',tags:['hengsao','daolun'],f(){cbOn=true;healMul=.5}},
- sunjian:{n:'孙坚',up:'移速+8%，闪身冷却-15%',dn:'最大生命-12%',cond:'携孙坚技能（旋风斩/冲锋）通关',tags:['xuanfeng','chong'],f(){spdMul*=1.08;DCD*=.85;hero.maxhp=Math.round(hero.maxhp*.88);hero.hp=hero.maxhp}},
- dongzhuo:{n:'董卓·西凉军',up:'射艺类伤害+15%',dn:'近战类伤害-10%',cond:'携西凉技能（箭雨/飞刀）通关',tags:['jianyu','feidao'],f(){rangedMul*=1.15;meleeMul*=.9}},
- huangjin:{n:'黄巾余部',up:'受击后4秒内伤害+25%',dn:'最大生命-15%',cond:'未杀一人，弃甲而逃',tags:['pili','huogong'],f(){rgOn=true;hero.maxhp=Math.round(hero.maxhp*.85);hero.hp=hero.maxhp}}};
 const FACOF={};for(const k in FAC)(FAC[k].tags||[]).forEach(t=>FACOF[t]=k);
-function applyFac(id){fac=id;if(FAC[id]&&FAC[id].f)FAC[id].f();}
+function applyFac(id){fac=id;if(FAC[id])applyFx(FAC[id].fx);}
 function calcGrade(win){const sc=Math.round((Math.min(wave,WAVES)/WAVES)*40+(win?20:0)+(win?hero.hp/hero.maxhp*10:0)+(hitsTaken<=5?15:hitsTaken<=12?8:hitsTaken<=25?3:0)+Math.min(10,kills/40)+Math.min(5,comboMax/30));
  const g=sc>=85?'名将':sc>=70?'校尉':sc>=55?'都伯':sc>=35?'伍长':'小卒';return {score:sc,grade:g};}
 function hurt(e,d,dx,dy,kb){if(ampT>0)d*=1.4;d*=profMul()*titleMul(e);const crit=Math.random()<0.1;if(crit)d*=1.5;if(dnums.length<50)dnums.push({x:e.x+(Math.random()*14-7),y:e.y,t:0,v:Math.max(1,Math.round(d*10)),crit});if(crit||e.type==='brute'||e.type==='brute2'){stopT=Math.max(stopT,crit?0.05:0.035);shk=Math.max(shk,crit?5:3);}e.hitT=0.2;e.flashT=0.09;sfx((e.hp-d<=0)?'kill':(e.type==='immortal'?'shield':'hit'));if(fxs.length<140)spark(e.x,e.y,dx,dy);if(curK)dmgSt[curK.id]=(dmgSt[curK.id]||0)+Math.round(Math.min(d,Math.max(e.hp,0)+0.0001)*10);if(!isFinite(dx)||!isFinite(dy)){dx=0;dy=0;}e.hp-=d;if(e.hp<=0){const j=enemies.indexOf(e);if(j>=0)kill(j,{dx,dy});}else{kb*=(TYPES[e.type].kbm||1);e.x+=dx*kb;e.y+=dy*kb/SQ;}}
@@ -466,7 +441,7 @@ function update(dt){
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
     statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}if(tipT>0){tipT-=dt;if(tipT<=0)tipEl.style.display='none';}if(hitsTaken!==_lh){_lh=hitsTaken;calmT=0;}else calmT+=dt;if(!tipSeen.crowd){if(nearest(8,45).length>=6)crowdT+=dt;else crowdT=0;if(crowdT>2.5&&calmT>3)showTip('crowd','被围住也不用慌：不会被所有人同时打，<b style="color:#ffd86a">只有抬手出招的敌人才伤你</b>。','刘备',7);}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
-  if(!bossPhase&&retreatT<=0&&(wave===4||wave===7)&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
+  if(!bossPhase&&retreatT<=0&&waveRow().gen&&waveT>=WAVE_TIME*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
   else if(waveT>=WAVE_TIME){retreatT=1.4;}
