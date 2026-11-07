@@ -21,7 +21,7 @@ img['hj2_atlas']=b64(P('art','hj2_art','hj2_atlas_q.png'))
 M['hj2']=json.load(open(P('art','hj2_art','hj2_atlas.json')))
 img['hj3_atlas']=b64(P('art','hj3_art','hj3_atlas_q.png'))
 M['hj3']=json.load(open(P('art','hj3_art','hj3_atlas.json')))
-for _n in ('hj4','hj5'):
+for _n in ('hj4','hj5','hj6','hj7','hj8'):
     img[_n+'_atlas']=b64(P('art',_n+'_art',_n+'_atlas_q.png'));M[_n]=json.load(open(P('art',_n+'_art',_n+'_atlas.json')))
 img['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'))
 M['atlas']=json.load(open(P('art','hero_art','hero_atlas.json')))
