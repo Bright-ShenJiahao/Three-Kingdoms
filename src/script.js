@@ -437,7 +437,7 @@ function update(dt){
   stiff=Math.max(0,stiff-dt);hurtT=Math.max(0,hurtT-dt);ampT=Math.max(0,ampT-dt);cbT=Math.max(0,cbT-dt);rgT=Math.max(0,rgT-dt);for(let i=texts.length-1;i>=0;i--){texts[i].t+=dt;if(texts[i].t>1)texts.splice(i,1);}popT=Math.max(0,popT-dt);for(let i=0;i<5;i++)skipFl[i]=Math.max(0,skipFl[i]-dt);
   const il=Math.hypot(ix,iy);hero.moving=il>0.08&&stiff<=0;
   dashCd=Math.max(0,dashCd-dt);
-  const SP=92*spdMul;
+  const SP=76*spdMul;
   if(hero.dash){const D=hero.dash;D.t+=dt;D.g+=dt;const dsp=105/0.24;hero.x+=D.dx*dsp*dt;hero.y+=D.dy*dsp*dt/SQ;if(D.g>0.03){D.g=0;ghosts.push({x:hero.x,y:hero.y,fa:hero.fa,a:0.5,f:Math.floor(hero.wk)%8});}for(const e of enemies){const ex=e.x-hero.x,ey=(e.y-hero.y)*SQ,dd=Math.hypot(ex,ey);if(dd<34*S&&dd>0.1){e.x+=ex/dd*5;e.y+=ey/dd*5/SQ;}}if(D.t>=0.24){hero.dash=null;stiff=0.12;}hero.moving=true;hero.wk+=dt*14;}
   else if(stiff>0){hero.wk=0;}
   else if(hero.moving){const m=Math.min(1,il)/il;hero.x+=ix*m*SP*dt;hero.y+=iy*m*SP*dt/SQ;hero.fa=Math.atan2(iy,ix);hero.wk+=dt*7.5;}
