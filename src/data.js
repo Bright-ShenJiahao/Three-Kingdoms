@@ -21,7 +21,7 @@ const TYPES={
  qiangshuai:{sp:50,r:13,hp:14,nm:'spara',hj:2,sc:1.2,reach:58,ar:62,aw:0.55,dmg:10,ac:1.4,ring:0,kbm:.4,mk:'#ff5a4a'},
  gongshou:{sp:60,r:10,hp:1,nm:'spara',hj:5,sc:1,reach:0,ar:0,aw:0.52,dmg:5,ac:1.96,ring:0,ranged:1,keep:230,range:330,mk:'#ffd84a'},
  nushou:{sp:54,r:10,hp:3,nm:'spara',hj:6,sc:1,reach:0,ar:0,aw:0.7,dmg:9,ac:2.5,ring:0,ranged:1,keep:270,range:380,mk:'#ffd84a'},
- nushuai:{sp:48,r:13,hp:10,nm:'spara',hj:2,sc:1.2,reach:0,ar:0,aw:0.6,dmg:12,ac:1.7,ring:0,ranged:1,keep:260,range:380,kbm:.5,mk:'#ff5a4a'},
+ nushuai:{sp:48,r:13,hp:10,nm:'spara',hj:9,sc:1.2,reach:0,ar:0,aw:0.6,dmg:12,ac:1.7,ring:0,ranged:1,keep:260,range:380,kbm:.5,mk:'#ff5a4a'},
  jishou:{sp:66,r:10,hp:2,nm:'spara',hj:2,sc:1,reach:40,ar:44,aw:0.5,dmg:6,ac:1.2,ring:0,mk:null},
  zhongji:{sp:46,r:12,hp:7,nm:'spara',hj:2,sc:1.15,reach:52,ar:56,aw:0.6,dmg:10,ac:1.5,ring:0,kbm:.3,mk:null},
  jishuai:{sp:44,r:14,hp:16,nm:'spara',hj:2,sc:1.25,reach:62,ar:66,aw:0.6,dmg:13,ac:1.5,ring:0,kbm:.4,mk:'#ff5a4a'},
