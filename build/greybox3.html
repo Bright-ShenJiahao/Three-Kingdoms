@@ -36,6 +36,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #dashBtn span{display:flex;align-items:center;justify-content:center;width:calc(var(--u)*84);height:calc(var(--u)*84);border-radius:50%;background:#1d1810;color:#f3e7c4;font-size:calc(var(--u)*22);font-weight:700}
 #dashBtn.rdy span{box-shadow:0 0 calc(var(--u)*14) #ffd76a inset}
 #stage.narrow #dashBtn{bottom:calc(var(--u)*86)}
+#wheel{position:absolute;left:calc(var(--u)*24);bottom:calc(var(--u)*24);width:calc(var(--u)*150);height:calc(var(--u)*150);border-radius:50%;border:calc(var(--u)*4) solid rgba(255,255,255,.3);background:radial-gradient(circle,rgba(255,255,255,.08),rgba(0,0,0,.25));z-index:5;touch-action:none;display:none}
+#wheel::before{content:'▲\A◀　▶\A▼';white-space:pre;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:calc(var(--u)*18);line-height:calc(var(--u)*32);color:rgba(255,255,255,.28)}
+#wheel i{position:absolute;width:calc(var(--u)*64);height:calc(var(--u)*64);border-radius:50%;background:rgba(255,255,255,.4);left:50%;top:50%;margin:calc(var(--u)*-32) 0 0 calc(var(--u)*-32)}
+#stage.narrow #wheel{bottom:calc(var(--u)*86)}
 #stick{position:absolute;width:90px;height:90px;border-radius:50%;border:2px solid rgba(255,255,255,.35);margin:-45px 0 0 -45px;pointer-events:none;display:none}
 #stick i{position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.35);left:27px;top:27px}
 #gear{position:fixed;left:8px;top:8px;z-index:20;width:38px;height:38px;border-radius:8px;border:1px solid #6b5a8a;background:#241d33;color:#fff;font-size:20px}
@@ -85,6 +89,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     </div>
     <div id="stick"><i></i></div>
     <div id="dashBtn"><span>闪身</span></div>
+    <div id="wheel"><i></i></div>
   </div>
 </div>
 <script>
@@ -334,21 +339,25 @@ const stage=$('stage'),cv=$('cv'),ctx=cv.getContext('2d');
 let SQ=0.7,S=1,N=250,phoneSim=false,DPR=1,paused=true,over=false;
 const hero={x:0,y:0,fa:0,wk:0,moving:false,hp:120,maxhp:120};let hurtT=0,ampT=0,atkMul=1;const texts=[];let DCD=0.9;let titleId='',statusT=0,statusKey='';let cbT=0,rgT=0,cbOn=false,rgOn=false,healMul=1,fac='';let spdMul=1,takeMul=1,crowdMul=false,bigMul=1,smallMul=1,rangedMul=1,meleeMul=1,allMul=1;let stopT=0,shk=0;const dnums=[];let pdCnt=0,hitsTaken=0,hitsW4=0,bruteK=0,archK=0;
 const enemies=[],effects=[],slashes=[],ghosts=[],corpses=[];let dashCd=0;
-let dmgSt={},comboMax=0,retreatT=0,bossPhase=false,won=false,started=false,kills=0,combo=0,comboT=0,slashT=0,skillIdx=0,tm=0,tclock=0,waveT=0,bossDone=false;
+let silver=0,waveK0=0,waveH0=0,dmgSt={},comboMax=0,retreatT=0,bossPhase=false,won=false,started=false,kills=0,combo=0,comboT=0,slashT=0,skillIdx=0,tm=0,tclock=0,waveT=0,bossDone=false;
 const keys={};
 addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();tryDash();return;}keys[e.key.toLowerCase()]=true;});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 let stick=null;
-function ptrDown(e){if(e.target.closest('#panel')||e.target.closest('#dashBtn')||e.target.closest('#ov')||e.target.id==='gear')return;stick={id:e.pointerId,ox:e.clientX,oy:e.clientY,dx:0,dy:0};const s=$('stick');s.style.display='block';s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.firstElementChild.style.left='27px';s.firstElementChild.style.top='27px';}
-function ptrMove(e){if(!stick||e.pointerId!==stick.id)return;let dx=e.clientX-stick.ox,dy=e.clientY-stick.oy;const l=Math.hypot(dx,dy),m=60;if(l>m){dx*=m/l;dy*=m/l;}stick.dx=dx/m;stick.dy=dy/m;const k=$('stick').firstElementChild;k.style.left=(27+dx*0.6)+'px';k.style.top=(27+dy*0.6)+'px';}
-function ptrUp(e){if(stick&&e.pointerId===stick.id){stick=null;$('stick').style.display='none';}}
+function ptrDown(e){if(e.target.closest('#panel')||e.target.closest('#dashBtn')||e.target.closest('#ov')||e.target.id==='gear')return;
+  if(e.target.closest('#wheel')){const r=$('wheel').getBoundingClientRect();stick={id:e.pointerId,ox:r.left+r.width/2,oy:r.top+r.height/2,dx:0,dy:0,fixed:1,m:r.width*0.4};ptrMove(e);return;}
+  stick={id:e.pointerId,ox:e.clientX,oy:e.clientY,dx:0,dy:0};const s=$('stick');s.style.display='block';s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.firstElementChild.style.left='27px';s.firstElementChild.style.top='27px';}
+function ptrMove(e){if(!stick||e.pointerId!==stick.id)return;let dx=e.clientX-stick.ox,dy=e.clientY-stick.oy;const l=Math.hypot(dx,dy),m=stick.m||60;if(l>m){dx*=m/l;dy*=m/l;}stick.dx=dx/m;stick.dy=dy/m;
+  if(stick.fixed){const k=$('wheel').firstElementChild;k.style.transform='translate('+dx+'px,'+dy+'px)';return;}
+  const k=$('stick').firstElementChild;k.style.left=(27+dx*0.6)+'px';k.style.top=(27+dy*0.6)+'px';}
+function ptrUp(e){if(stick&&e.pointerId===stick.id){if(stick.fixed)$('wheel').firstElementChild.style.transform='';stick=null;$('stick').style.display='none';}}
 addEventListener('pointerdown',ptrDown);addEventListener('pointermove',ptrMove);addEventListener('pointerup',ptrUp);addEventListener('pointercancel',ptrUp);
 function resize(){
   const vw=innerWidth,vh=innerHeight;let w=vw,h=vh;
   if(phoneSim){h=vh-16;w=Math.min(vw-16,Math.round(h*9/19.5));}
   stage.style.width=w+'px';stage.style.height=h+'px';
   DPR=Math.min(devicePixelRatio||1,3);cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
-  stage.style.setProperty('--u',(h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);
+  stage.style.setProperty('--u',(h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);$('wheel').style.display=(phoneSim||w/h<0.8||matchMedia('(pointer:coarse)').matches)?'block':'none';
 }
 addEventListener('resize',resize);resize();
 const skills=$('skills');
@@ -409,17 +418,55 @@ function tryEvent(done){if(!waveRow().ev||evUsed[wave])return false;evUsed[wave]
 function pickPool(){const have=loadout.filter(x=>x);const c=SKID.filter(id=>have.indexOf(id)<0).map(id=>({id,w:FACOF[id]===fac&&fac&&fac!=='xiangyong'?4:1.5}));const r=[];while(r.length<3&&c.length){let t=c.reduce((a,b)=>a+b.w,0),x=Math.random()*t,k=0;for(;k<c.length-1;k++){x-=c[k].w;if(x<=0)break;}r.push(c[k].id);c.splice(k,1);}return r;}
 function endWave(){
   if(paused||over)return;paused=true;
-  const opts=pickPool();
-  const card=id=>'<button data-s="'+id+'" style="width:calc(var(--u)*210);padding:calc(var(--u)*16);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4;text-align:center"><div style="font-size:calc(var(--u)*40)">'+SK[id].g+'</div><div style="font-size:calc(var(--u)*28);font-weight:700">'+SK[id].n+'</div><div style="font-size:calc(var(--u)*18);color:#bfae82;margin-top:4px">'+(CAT[id]||'')+(FACOF[id]?' · '+FAC[FACOF[id]].n:' · 通用')+'</div></button>';
-  const doNext=()=>{hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(30*healMul));wave++;waveT=0;paused=false;ov.style.display='none';};
+  const doNext=()=>{hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(30*healMul));wave++;waveT=0;waveK0=kills;waveH0=hitsTaken;paused=false;ov.style.display='none';};
   const next=()=>{ov.style.display='none';if(!tryEvent(doNext))doNext();};
-  const main=()=>{showOv('<div style="font-size:calc(var(--u)*46);font-weight:700">第 '+wave+' 波结束</div><div style="font-size:calc(var(--u)*22);color:#bfae82">择一门武艺（'+(FAC[fac]&&fac!=='xiangyong'?FAC[fac].n+'技能更常见':'随机')+'）</div><div style="display:flex;gap:calc(var(--u)*16);flex-wrap:wrap;justify-content:center">'+opts.map(card).join('')+'</div><button id="nextW" style="'+BTN+';opacity:.8">跳过，下一波</button>');
+  let tab='sum',opts=pickPool(),picked=null,rc=0,replacing=null,selSlot=0;
+  const SHOP_POOL=[
+    {n:'干粮',g:'🍙',d:'回复35%气血',p:30,fx:{heal:.35}},{n:'烈酒',g:'🍶',d:'最大生命+10',p:40,fx:{maxhpAdd:10}},
+    {n:'磨刀石',g:'🪨',d:'全部伤害+4%',p:50,fx:{all:1.04}},{n:'草鞋',g:'👞',d:'移速+4%',p:45,fx:{spd:1.04}},
+    {n:'护心镜',g:'🛡',d:'受到伤害-4%',p:50,fx:{take:.96}},{n:'火折子',g:'🔥',d:'闪身冷却-6%',p:40,fx:{dcd:.94}}];
+  const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  let shop=shuffle(SHOP_POOL).slice(0,3).map(x=>({...x,sold:false}));let srf=0;
+  const u=n=>'calc(var(--u)*'+n+')';
+  const PAN='background:#14120f;border:'+u(3)+' solid '+GOLD+';padding:'+u(16)+';text-align:left;box-sizing:border-box';
+  const BT='background:#241d12;border:'+u(2)+' solid #6b5426;color:#f3e7c4;padding:'+u(8)+' '+u(18)+';font-size:'+u(22);
+  const pct=m=>{const v=Math.round((m-1)*100);return (v>0?'+':'')+v+'%';};
+  const bar=(v,m,c)=>'<div style="height:'+u(16)+';background:#000;border:1px solid #6b5426;margin:'+u(4)+' 0"><div style="height:100%;width:'+Math.max(0,Math.min(100,v/m*100))+'%;background:'+c+'"></div></div>';
+  const skCard=(id,extra)=>'<button data-s="'+id+'" '+(picked?'disabled':'')+' style="flex:1 1 '+u(180)+';min-width:'+u(150)+';padding:'+u(14)+';background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4;text-align:center;'+(picked?'opacity:.45':'')+'"><div style="font-size:'+u(44)+'">'+SK[id].g+'</div><div style="font-size:'+u(26)+';font-weight:700">'+SK[id].n+'</div><div style="font-size:'+u(16)+';color:#bfae82;margin-top:4px">'+(CAT[id]||'')+(FACOF[id]?' · '+FAC[FACOF[id]].n:' · 通用')+'</div><div style="font-size:'+u(15)+';color:#9fb;margin-top:4px">冷却 '+SK[id].cd+' 秒</div></button>';
+  function body(){
+    if(tab==='sum'){const tot=Object.values(dmgSt).reduce((a,b)=>a+b,0)||1;const dm=Object.keys(dmgSt).map(id=>({id,v:dmgSt[id]})).sort((x,y)=>y.v-x.v).slice(0,5);
+      return '<div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'"><div style="color:#bfae82;font-size:'+u(20)+'">总结</div><div style="font-size:'+u(26)+';margin:'+u(8)+' 0;line-height:1.7">本波击杀　<b style="color:#ffd76a">'+(kills-waveK0)+'</b>　累计 <b>'+kills+'</b><br>银钱　<b style="color:#ffd76a">'+silver+'</b>　受击 <b>'+(hitsTaken-waveH0)+'</b> 次</div><div style="color:#bfae82;font-size:'+u(20)+';margin-top:'+u(8)+'">输出统计</div>'+(dm.map(x=>'<div style="font-size:'+u(20)+'">'+(SK[x.id]?SK[x.id].g+' '+SK[x.id].n:x.id)+' <span style="float:right;color:#ffd76a">'+Math.round(x.v/tot*100)+'%</span></div>'+bar(x.v,tot,'#c99a3a')).join('')||'<div style="color:#8d7a4a;font-size:'+u(18)+'">暂无</div>')+'</div>'+
+      '<div style="'+PAN+';flex:1 1 '+u(260)+';max-width:'+u(420)+'"><div style="color:#bfae82;font-size:'+u(20)+'">状态</div><div style="font-size:'+u(24)+';margin-top:'+u(8)+'">气血 '+Math.ceil(hero.hp)+' / '+hero.maxhp+'</div>'+bar(hero.hp,hero.maxhp,'#b3262c')+'<div style="font-size:'+u(22)+';margin-top:'+u(10)+';line-height:1.7">第 '+wave+' / '+WAVES+' 波结束<br>势力　'+(FAC[fac]?FAC[fac].n:'普通乡勇')+'<br>最高连击　'+comboMax+'<br><span style="color:#bfae82;font-size:'+u(18)+'">下一波开始前回复 '+Math.round(30*healMul)+' 点</span></div></div></div>';}
+    if(tab==='xl'){
+      if(replacing){return '<div style="'+PAN+';width:100%;max-width:'+u(700)+'"><div style="font-size:'+u(28)+';margin-bottom:'+u(10)+'">'+SK[replacing].g+' '+SK[replacing].n+'　替换哪一格？</div><div style="display:flex;gap:'+u(10)+';flex-wrap:wrap">'+loadout.map((x,i)=>'<button data-r="'+i+'" style="flex:1 1 '+u(110)+';padding:'+u(10)+';background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4"><div style="font-size:'+u(32)+'">'+(SK[x]?SK[x].g:'')+'</div><div style="font-size:'+u(18)+'">'+(SK[x]?SK[x].n:'空')+'</div></button>').join('')+'</div><button id="bk" style="'+BT+';margin-top:'+u(12)+'">返回</button></div>';}
+      return '<div style="width:100%;max-width:'+u(760)+'"><div style="font-size:'+u(22)+';color:#bfae82;margin-bottom:'+u(10)+'">'+(picked?'已修炼：'+SK[picked].n:'择一门武艺（'+(FAC[fac]&&fac!=='xiangyong'?FAC[fac].n+'技能更常见':'随机')+'）')+'</div><div style="display:flex;gap:'+u(14)+';flex-wrap:wrap;justify-content:center">'+opts.map(id=>skCard(id)).join('')+'</div></div>';}
+    if(tab==='sh'){return '<div style="width:100%;max-width:'+u(760)+'"><div style="font-size:'+u(22)+';color:#bfae82;margin-bottom:'+u(10)+'">行脚商人　银钱 '+silver+'</div><div style="display:flex;gap:'+u(14)+';flex-wrap:wrap;justify-content:center">'+shop.map((x,i)=>'<button data-b="'+i+'" '+(x.sold||silver<x.p?'disabled':'')+' style="flex:1 1 '+u(170)+';min-width:'+u(140)+';padding:'+u(14)+';background:#2a2114;border:2px solid '+(x.sold||silver<x.p?'#4a3f26':'#d9b25a')+';border-radius:10px;color:#f3e7c4;text-align:center;'+(x.sold?'opacity:.4':silver<x.p?'opacity:.6':'')+'"><div style="font-size:'+u(42)+'">'+x.g+'</div><div style="font-size:'+u(26)+';font-weight:700">'+x.n+'</div><div style="font-size:'+u(17)+';color:#bfae82;margin:'+u(6)+' 0">'+x.d+'</div><div style="font-size:'+u(22)+';color:#ffd76a">'+(x.sold?'已购':'购买 '+x.p+' 银')+'</div></button>').join('')+'</div></div>';}
+    // 武学
+    const k=loadout[selSlot],f=FAC[FACOF[k]];const cnt={};loadout.forEach(x=>{const q=FACOF[x];if(q)cnt[q]=(cnt[q]||0)+1;});
+    return '<div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'"><div style="color:#bfae82;font-size:'+u(20)+'">上阵武艺</div><div style="display:flex;gap:'+u(8)+';margin:'+u(10)+' 0">'+loadout.map((x,i)=>'<button data-v="'+i+'" style="flex:1;aspect-ratio:1;background:#241d12;border:2px solid '+(i===selSlot?'#ffd76a':'#6b5426')+';color:#f3e7c4;font-size:'+u(34)+'">'+(SK[x]?SK[x].g:'+')+'</button>').join('')+'</div>'+(k?'<div style="font-size:'+u(28)+';font-weight:700">'+SK[k].g+' '+SK[k].n+'</div><div style="font-size:'+u(20)+';color:#bfae82;line-height:1.6">'+(CAT[k]||'')+(f?' · '+f.n:' · 通用')+'<br>冷却 '+SK[k].cd+' 秒'+(SK[k].need?'　触发距离约 '+SK[k].need:'')+'</div>':'<div style="color:#8d7a4a">空槽</div>')+'</div>'+
+    '<div style="'+PAN+';flex:1 1 '+u(260)+';max-width:'+u(420)+'"><div style="color:#bfae82;font-size:'+u(20)+'">势力共鸣</div><div style="font-size:'+u(22)+';margin-top:'+u(8)+';line-height:1.7">'+(Object.keys(cnt).map(q=>FAC[q].n+' × '+cnt[q]).join('<br>')||'暂无')+'<br><span style="color:#bfae82;font-size:'+u(18)+'">当前势力：'+(FAC[fac]?FAC[fac].n+'　'+FAC[fac].up+'；'+FAC[fac].dn:'普通乡勇')+'</span></div></div></div>';}
+  function stats(){const c=(l,v)=>'<div style="flex:1 1 '+u(56)+';text-align:center;white-space:nowrap"><div style="font-size:'+u(15)+';color:#bfae82">'+l+'</div><div style="font-size:'+u(19)+';font-weight:700">'+v+'</div></div>';
+    return c('气血',Math.ceil(hero.hp)+'/'+hero.maxhp)+c('伤害',pct(allMul))+c('受伤',pct(takeMul))+c('移速',pct(spdMul))+c('闪身',DCD.toFixed(2)+'s')+c('击杀',kills)+c('银钱',silver);}
+  function draw(){
+    const tabs=[['sum','结算'],['xl','修炼'],['sh','行商'],['wx','武学']];
+    const rf=tab==='xl'?(!picked&&!replacing?'<button id="rf" '+(silver<15+10*rc?'disabled style="opacity:.5;'+BT+'"':'style="'+BT+'"')+'>刷新　'+(15+10*rc)+' 银</button>':''):tab==='sh'?'<button id="rf" '+(silver<20+10*srf?'disabled style="opacity:.5;'+BT+'"':'style="'+BT+'"')+'>刷新　'+(20+10*srf)+' 银</button>':'';
+    ov.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:'+u(20)+';box-sizing:border-box;background:rgba(8,6,3,.93);gap:'+u(14)+'">'+
+      '<div style="width:100%;display:flex;justify-content:space-between;align-items:center"><div style="margin-left:'+u(64)+';border:2px solid '+GOLD+';padding:'+u(6)+' '+u(16)+';font-size:'+u(26)+';background:#14120f">🪙 '+silver+'</div><div style="font-size:'+u(20)+';color:#bfae82">第 '+wave+' 波结束</div></div>'+
+      '<div style="display:flex;gap:'+u(6)+';width:100%;max-width:'+u(760)+'">'+tabs.map(t=>'<button data-t="'+t[0]+'" style="flex:1;padding:'+u(12)+' 0;font-size:'+u(28)+';background:'+(tab===t[0]?'#6b4a14':'#1b1710')+';border:2px solid '+(tab===t[0]?'#ffd76a':'#6b5426')+';color:#f3e7c4">'+t[1]+'</button>').join('')+'</div>'+
+      '<div style="flex:1;width:100%;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding-top:'+u(6)+'">'+body()+'</div>'+
+      '<div style="width:100%;max-width:'+u(900)+';display:flex;flex-wrap:wrap;gap:'+u(6)+';background:#14120f;border:'+u(3)+' solid '+GOLD+';padding:'+u(8)+';box-sizing:border-box">'+stats()+'</div>'+
+      '<div style="width:100%;max-width:'+u(900)+';display:flex;justify-content:space-between;align-items:center;gap:'+u(12)+'"><div style="min-width:'+u(120)+'">'+rf+'</div><button id="nextW" style="'+BTN+'">继续</button></div></div>';
+    ov.style.display='flex';
+    ov.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;replacing=null;draw();});
     $('nextW').onclick=next;
-    ov.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const id=b.dataset.s,e=loadout.indexOf('');
-      if(e>=0){loadout[e]=id;cds[e]=0.2;buildHud();syncSel();next();return;}
-      showOv('<div style="font-size:calc(var(--u)*38);font-weight:700">'+SK[id].g+' '+SK[id].n+' 替换哪一格？</div><div style="display:flex;gap:calc(var(--u)*10);flex-wrap:wrap;justify-content:center">'+loadout.map((x,i)=>'<button data-r="'+i+'" style="width:calc(var(--u)*130);padding:calc(var(--u)*12);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4"><div style="font-size:calc(var(--u)*32)">'+(SK[x]?SK[x].g:'')+'</div><div style="font-size:calc(var(--u)*20)">'+(SK[x]?SK[x].n:'')+'</div></button>').join('')+'</div><button id="bk" style="'+BTN+';opacity:.8">返回</button>');
-      $('bk').onclick=main;ov.querySelectorAll('[data-r]').forEach(r=>r.onclick=()=>{const k=+r.dataset.r;loadout[k]=id;cds[k]=0.2;buildHud();syncSel();next();});});};
-  main();
+    const rfb=$('rf');if(rfb)rfb.onclick=()=>{if(tab==='xl'){const c=15+10*rc;if(silver<c)return;silver-=c;rc++;opts=pickPool();}else{const c=20+10*srf;if(silver<c)return;silver-=c;srf++;shop=shuffle(SHOP_POOL).slice(0,3).map(x=>({...x,sold:false}));}draw();};
+    ov.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const id=b.dataset.s,e=loadout.indexOf('');if(e>=0){loadout[e]=id;cds[e]=0.2;buildHud();syncSel();picked=id;}else replacing=id;draw();});
+    ov.querySelectorAll('[data-r]').forEach(r=>r.onclick=()=>{const k=+r.dataset.r;loadout[k]=replacing;cds[k]=0.2;buildHud();syncSel();picked=replacing;replacing=null;draw();});
+    const bk=$('bk');if(bk)bk.onclick=()=>{replacing=null;draw();};
+    ov.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const x=shop[+b.dataset.b];if(x.sold||silver<x.p)return;silver-=x.p;x.sold=true;applyFx(x.fx);draw();});
+    ov.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{selSlot=+b.dataset.v;draw();});
+  }
+  draw();
 }
 const BTN='font-size:calc(var(--u)*32);padding:calc(var(--u)*12) calc(var(--u)*40);border-radius:10px;border:2px solid #d9b25a;background:#6b4a14;color:#fff';
 function startBoss(){bossPhase=true;enemies.length=0;spawn('brute');floatTxt('张角出场','#ff9a6a');}
@@ -468,7 +515,7 @@ function tryDash(){
   let l=Math.hypot(ix,iy);if(l<0.1){ix=Math.cos(hero.fa);iy=Math.sin(hero.fa);l=1;}
   hero.dash={t:0,g:0,dx:ix/l,dy:iy/l};sfx('dash');hero.fa=Math.atan2(iy,ix);dashCd=DCD;if(wind){skipFl[wind.i]=0.35;wind=null;qi=(qi+1)%5;qt=0;}
 }
-function kill(j,p){cbT=2;const e=enemies[j],T=TYPES[e.type];if(e.type==='brute'||e.type==='brute2'){bruteK++;stopT=Math.max(stopT,0.08);shk=Math.max(shk,7);}if(e.type==='archer')archK++;enemies.splice(j,1);kills++;combo++;if(combo>comboMax)comboMax=combo;comboT=2;
+function kill(j,p){cbT=2;const e=enemies[j],T=TYPES[e.type];if(e.type==='brute'||e.type==='brute2'){bruteK++;stopT=Math.max(stopT,0.08);shk=Math.max(shk,7);}if(e.type==='archer')archK++;enemies.splice(j,1);kills++;silver+=e.type==='brute'?40:e.type==='brute2'?15:T.hp>=4?2:1;combo++;if(combo>comboMax)comboMax=combo;comboT=2;
   corpses.push({x:e.x,y:e.y,t:0,vx:p.dx*150,vy:p.dy*70/SQ,rot:(Math.random()*2-1)*6,flip:p.dx<0?1:-1,T});}
 
 // ===== 武艺系统 =====
@@ -496,7 +543,7 @@ setInterval(()=>{const a=AC;if(!a||typeof started==='undefined'||!started)return
   if(wave!==bgmWave){if(bgmWave>0&&wave>bgmWave)BGMo.gong();bgmWave=wave;BGMo.setLevel(1+Math.floor((wave-1)/2));}
   if(bossPhase!==bgmBoss){bgmBoss=bossPhase;BGMo.boss(bossPhase);}
   BGMo.duck(paused?.35:1);
-  if(!window.__bgmV){window.__bgmV=1;const b=document.createElement('div');b.style.cssText='position:fixed;right:8px;top:8px;z-index:99;padding:4px 10px;background:#000a;color:#e8d9a8;border:1px solid #8a7440;font:14px sans-serif;cursor:pointer;user-select:none';
+  if(!window.__bgmV){window.__bgmV=1;const b=document.createElement('div');b.style.cssText='position:fixed;right:8px;top:8px;z-index:6;padding:4px 10px;background:#000a;color:#e8d9a8;border:1px solid #8a7440;font:14px sans-serif;cursor:pointer;user-select:none';
     const set=v=>{BGMo.ver(v);b.textContent='配乐 '+(v===2?'B 大气版':'A 旌旗北望')+'（点我/M键切换）';};set(2);
     b.onclick=()=>set(BGMo.getVer()===2?1:2);addEventListener('keydown',e=>{if(e.code==='KeyM')b.onclick();});document.body.appendChild(b);}},300);
 function sfx(k){const a=acx();if(!a)return;const now=a.currentTime,lim={hit:0.045,kill:0.06,hurt:0.12,dash:0.1,swing:0.12,shield:0.06,arrow:0.1};if(now-(sfxT[k]||-9)<(lim[k]||0.05))return;sfxT[k]=now;
