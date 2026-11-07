@@ -19,6 +19,8 @@ for _k,_n in (('spara',6),('immortal',6),('pcav8',8),('comp8',8)):
         for i in range(_n): img['%s_%s%d'%(_k,d,i)]=b64('%s/%s/%s%d.png'%(R,_k,d,i))
 img['hj_atlas']=b64(P('art','hj_art','hj_atlas_q.png'))
 M['hj']=json.load(open(P('art','hj_art','hj_atlas.json')))
+img['hj2_atlas']=b64(P('art','hj2_art','hj2_atlas_q.png'))
+M['hj2']=json.load(open(P('art','hj2_art','hj2_atlas.json')))
 img['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'))
 M['atlas']=json.load(open(P('art','hero_art','hero_atlas.json')))
 img['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))
