@@ -92,12 +92,13 @@ const OR=[
  {n:'马夫',g:'骑',t:'喂过战马，也骑过战马。',e:'冲撞击飞，落地有震击',w:['长矛','矛','近战·长柄'],fit:'长柄',a:[4,2,4,1,5,2,1,3],main:'武艺',s:['驰','战马冲锋','沿直线冲撞，击飞路上的敌人'],q:'驭马冲刺',qd:'短距冲刺，撞开敌人'},
  {n:'书生',g:'策',t:'读过兵书，肚里有谋。',e:'技能冷却 -10%，经验 +10%',w:['竹简','简','法器'],fit:'法器',a:[2,1,1,1,1,2,6,4],main:'天书',s:['火','火攻','脚下起火圈，持续灼烧一片'],q:'缩地',qd:'瞬移一小段，不吃伤害'}
 ];
-const AN=['体魄','短兵','长兵','射艺','骑术','身法','智谋','运气'];
+const AN=['体魄','短兵','长兵','射艺','骑术','身法','智谋','运气','筋骨','避锋','威势','杀伐','气海','回元'];
+const EXA={'农夫':[4,1,2,2,2,2],'猎户':[1,4,3,3,2,3],'小卒':[5,2,3,2,2,2],'马夫':[3,2,4,3,2,2],'书生':[1,3,2,2,5,5]};OR.forEach(o=>{o.a=o.a.concat(EXA[o.n]||[2,2,2,2,2,2]);});
 let cur=0;
 try{L('kn').textContent=(localStorage.getItem('wm.name')||'').trim()||'无名氏'}catch(e){}
 const cards=L('cards');
 OR.forEach((o,i)=>{const b=document.createElement('button');b.className='card';b.innerHTML=`<div class="ic">${o.g}</div><div><b>${o.n}<span class="tag">${o.w[0]}</span></b><span>${o.t}</span></div>`;b.onclick=()=>pick(i);cards.append(b);o.el=b});
-L('attr').innerHTML=AN.map((n,i)=>`<em${i===4?' style="opacity:.4"':''}>${n}</em><div class="b"${i===4?' style="opacity:.4"':''}><i id="ab${i}"></i></div><u id="av${i}"${i===4?' style="opacity:.4"':''}></u>`).join('')+'<div class="nt">体魄决定生命；运气影响暴击与掉落品质；骑术后期开放。</div>';
+L('attr').innerHTML=AN.map((n,i)=>`<em${i===4?' style="opacity:.4"':''}>${n}</em><div class="b"${i===4?' style="opacity:.4"':''}><i id="ab${i}"></i></div><u id="av${i}"${i===4?' style="opacity:.4"':''}></u>`).join('')+'<div class="nt">体魄决定生命；运气影响暴击与掉落；筋骨减伤、避锋免伤、威势增范围、杀伐增暴伤；气海是真气上限，回元管回复与调息。</div>';
 function row(lb,n,fill,fs){let h=`<div class="rowl"><em>${lb}</em>`;for(let k=0;k<n;k++){h+=k===0&&fill?`<div class="slot f">${fill}</div>`:`<div class="slot"></div>`}return h+'</div>'}
 function pick(i){cur=i;const o=OR[i];OR.forEach((x,j)=>x.el.classList.toggle('on',j===i));
  L('eff').innerHTML='特点：'+o.e+'<br>起手武器：'+o.w[0]+'（'+o.w[2]+'）　擅长：'+AN[o.a.reduce((m,v,k)=>(k>0&&k<7&&k!==4&&k!==5&&v>o.a[m]?k:m),1)];L('ko').textContent=o.n;

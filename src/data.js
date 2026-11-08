@@ -108,7 +108,7 @@ const DROP={coin:0.6,silver:[0,5,15,60],item:[0.01,0.06,0.35,1],scroll:[0,0.03,0
 const SKPRICE={'黄':40,'玄':90,'地':160,'天':260};
 const ITEMS=[
  {n:'干粮',g:'🍙',d:'回复20%气血',fx:{heal:.2}},{n:'磨刀石',g:'🪨',d:'全部伤害+2%',fx:{all:1.02}},
- {n:'草鞋',g:'👞',d:'移速+2%',fx:{spd:1.02}},{n:'烈酒',g:'🍶',d:'最大生命+6',fx:{maxhpAdd:6}}];
+ {n:'草鞋',g:'👞',d:'移速+2%',fx:{spd:1.02}},{n:'烈酒',g:'🍶',d:'最大生命+6',fx:{maxhpAdd:6}},{n:'参汤',g:'🍲',d:'气海+1（永久）',fx:{attr:{12:1}}}];
 // 每波结束三选一：永久被动
 const PASSIVES=[
  {id:'yongli',n:'勇力',g:'💪',d:'全部伤害+5%',fx:{all:1.05}},
@@ -121,4 +121,6 @@ const PASSIVES=[
  {id:'yuxue',n:'浴血',g:'🩸',d:'气血回复+30点（立刻）',fx:{heal:.3}},
  {id:'jingjin',n:'精进',g:'📈',d:'全部伤害+3%，受伤-3%',fx:{all:1.03,take:.97}},
  {id:'jijian',n:'疾箭',g:'🏹',d:'射艺类伤害+10%',fx:{ranged:1.1}},
- {id:'poyin',n:'破阵',g:'⚔️',d:'近战类伤害+8%',fx:{melee:1.08}}];
+ {id:'poyin',n:'破阵',g:'⚔️',d:'近战类伤害+8%',fx:{melee:1.08}},
+ {id:'jingu',n:'练筋骨',g:'🦴',d:'筋骨+2',fx:{attr:{8:2}}},{id:'shanzhuan',n:'闪转',g:'💨',d:'避锋+2',fx:{attr:{9:2}}},{id:'zhuangshi',n:'壮势',g:'🚩',d:'威势+2',fx:{attr:{10:2}}},
+ {id:'mofeng',n:'磨锋',g:'🗡',d:'杀伐+2',fx:{attr:{11:2}}},{id:'yangqi2',n:'养气',g:'🌫',d:'气海+2',fx:{attr:{12:2}}},{id:'tiaoyuan',n:'调元',g:'♻️',d:'回元+2',fx:{attr:{13:2}}}];
