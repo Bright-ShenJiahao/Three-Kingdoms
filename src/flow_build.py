@@ -82,7 +82,7 @@ settle=rep(settle,"onclick=\"t('返回主菜单：样板')\"","onclick=\"parent.
 settle=rep(settle,"onclick=\"t('再来一局：样板')\"","onclick=\"parent.postMessage({t:'again'},'*')\"")
 settle=rep(settle,"const data=[['⚔','剑气',49678],['🏹','箭雨',29691],['🔱','枪刺',23896],['🔥','火攻',23812],['🗡','飞刀',22916],['🌀','旋风斩',19474],['⚡','霹雳',14200],['🔨','震地',9100],['☯','刀轮',6400],['🐎','冲锋',3200]];\nconst tot=data.reduce((a,b)=>a+b[2],0),mx=data[0][2];",
 """const R=window.__RES||{win:false,kills:0,time:0,wave:1,waves:8,combo:0,dmg:[],loadout:[],ori:'农夫',wp:'军刀',attrs:[0,0,0,0,0,0,0,0]};
-const data=R.dmg.length?R.dmg.map(d=>[d.g,d.n,d.v]):[['—','尚无伤害',1]];
+const data=R.dmg.length?R.dmg.map(d=>[d.ic?'<img src="'+d.ic+'" style="width:100%;height:100%;object-fit:contain">':d.g,d.n,d.v]):[['—','尚无伤害',1]];
 const tot=data.reduce((a,b)=>a+b[2],0)||1,mx=data[0][2]||1;""")
 settle=rep(settle,"let win=false;document.getElementById('S').onclick=()=>{win=!win;F.classList.toggle('win',win);T.textContent=win?'大破黄巾':'兵败涿郡';S.textContent=win?'胜':'败';};",
 """(function(){const win=!!R.win;F.classList.toggle('win',win);T.textContent=win?'大破黄巾':'兵败涿郡';S.textContent=win?'胜':'败';
@@ -91,8 +91,8 @@ settle=rep(settle,"let win=false;document.getElementById('S').onclick=()=>{win=!
  cs[2].querySelector('b').textContent='剩余血量';cs[2].querySelector('strong').textContent=R.hp;cs[2].querySelector('em').textContent='❤';
  cs[3].querySelector('strong').textContent=R.combo;cs[4].querySelector('b').textContent='波次';cs[4].querySelector('strong').textContent=R.wave;cs[4].querySelector('em').textContent='🥁';
  const pct=win?100:Math.min(100,(R.wave-1+Math.min(1,R.time%60/60))/R.waves*100);cs[5].querySelector('i').style.width=pct+'%';cs[5].querySelector('span').textContent=(win?R.waves:R.wave)+'/'+R.waves;
- const ch=document.querySelectorAll('.chips span');ch[0].innerHTML='<i>☠</i>标准';ch[1].innerHTML='<i>🌾</i>'+R.ori;ch[2].innerHTML='<i>⚔</i>'+R.wp;
- const ic=document.querySelectorAll('.pn:first-child .row')[0].querySelectorAll('.ic');ic.forEach((e,i)=>e.textContent=R.loadout[i]||'');
+ const ch=document.querySelectorAll('.chips span');ch[0].innerHTML='<i>☠</i>标准';ch[1].innerHTML='<i>🌾</i>'+R.ori;ch[2].innerHTML=(R.wpic?'<i><img src="'+R.wpic+'" style="width:22px;height:22px;vertical-align:middle"></i>':'<i>⚔</i>')+(R.wpn||R.wp);
+ const ic=document.querySelectorAll('.pn:first-child .row')[0].querySelectorAll('.ic');ic.forEach((e,i)=>{const u=(R.lic||[])[i];if(u)e.innerHTML='<img src="'+u+'" style="width:100%;height:100%;object-fit:contain">';else e.textContent=R.loadout[i]||''});
  const av=document.querySelectorAll('.attrs div');av.forEach((e,i)=>{e.lastChild.textContent=R.attrs[i]||0;});
  document.querySelector('.gain span:last-child').textContent=win?'张角授首，黄巾溃散（本作无局外成长，只留一场战报）':'阵亡于第 '+R.wave+' 波（本作无局外成长，只留一场战报）';
  document.querySelector('.gain .lb').textContent=win?'战果':'败因';

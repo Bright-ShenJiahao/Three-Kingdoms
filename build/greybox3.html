@@ -582,9 +582,9 @@ function endWave(){
 }
 const BTN='font-size:calc(var(--u)*32);padding:calc(var(--u)*12) calc(var(--u)*40);border-radius:10px;border:2px solid #d9b25a;background:#6b4a14;color:#fff';
 function startBoss(){bossPhase=true;enemies.length=0;spawn('zhangjiao',200,-1.57);floatTxt('张角出场','#ff9a6a');}
-function endReport(win){const dm=Object.keys(dmgSt).map(id=>({id,g:SK[id]?SK[id].g:'?',n:SK[id]?SK[id].n:id,v:dmgSt[id]})).sort((x,y)=>y.v-x.v);
+function endReport(win){const dm=Object.keys(dmgSt).map(id=>({id,g:SK[id]?SK[id].g:'?',ic:SK[id]&&SK[id].ic?ASSETS.img[SK[id].ic]:'',n:SK[id]?SK[id].n:id,v:dmgSt[id]})).sort((x,y)=>y.v-x.v);
   let bg='';try{bg=cv.toDataURL('image/jpeg',0.55);}catch(e){}
-  return {t:'end',bg,win,kills,time:Math.floor(tclock),wave:Math.min(wave,WAVES),waves:WAVES,combo:comboMax,hp:Math.ceil(hero.hp),dmg:dm,loadout:loadout.filter(id=>SK[id]).map(id=>SK[id].g),cat:mainCat,fac,facs:[...new Set(loadout.map(x=>FACOF[x]).filter(Boolean))],stats:{kills,pd:pdCnt,hits:hitsTaken,hitsW4,bruteK,archK,win},...calcGrade(win)};}
+  return {t:'end',bg,win,kills,time:Math.floor(tclock),wave:Math.min(wave,WAVES),waves:WAVES,combo:comboMax,hp:Math.ceil(hero.hp),dmg:dm,loadout:loadout.filter(id=>SK[id]).map(id=>SK[id].g),lic:loadout.filter(id=>SK[id]).map(id=>SK[id].ic?ASSETS.img[SK[id].ic]:''),wpn:WP[weapon]?WP[weapon].n:'',wpic:WP[weapon]?ASSETS.img[WP[weapon].ic]:'',cat:mainCat,fac,facs:[...new Set(loadout.map(x=>FACOF[x]).filter(Boolean))],stats:{kills,pd:pdCnt,hits:hitsTaken,hitsW4,bruteK,archK,win},...calcGrade(win)};}
 function heroWin(){won=true;over=true;if(parent!==window){parent.postMessage(endReport(true),'*');return;}showOv('<div style="font-size:calc(var(--u)*52);font-weight:700;color:#f0c24a">大破黄巾</div><div style="font-size:calc(var(--u)*26)">击倒 '+kills+'　剩余血量 '+Math.ceil(hero.hp)+'</div><button id="again" style="'+BTN+'">再来一局</button>');$('again').onclick=()=>location.reload();}
 
 function ringR(){const kk=cv.height/VH;const vw=cv.width/kk;return Math.hypot(vw/2,VH/2)+50;}
