@@ -539,7 +539,7 @@ function endWave(){
     const attrH='<div style="margin-top:'+u(10)+';font-size:'+u(15)+';color:#8fa6bf;line-height:1.6">筋骨 '+aEff(8).toFixed(1)+'（减伤 '+Math.round((1-AP.take)*100)+'%）　避锋 '+aEff(9).toFixed(1)+'（免伤 '+Math.round(dodgeP()*100)+'%）<br>威势 '+aEff(10).toFixed(1)+'（范围 +'+Math.round((RNGB-1)*100)+'%）　杀伐 '+aEff(11).toFixed(1)+'（暴伤 +'+Math.round(critDmg()*100)+'%）<br>气海 '+aEff(12).toFixed(1)+'　回元 '+aEff(13).toFixed(1)+'（调息 '+Math.round(hyRate()*100)+'%）</div>';
     const cnt={};loadout.forEach(x=>{const q=FACOF[x];if(q)cnt[q]=(cnt[q]||0)+1;});
     const bagH=bag.map((it,i)=>{const nm=it.k==='xd'?{g:'📜',n:'心得·'+it.id}:it.k==='sk'?SK[it.id]:it.k==='gf'?GF[it.id]:WP[it.id];return '<button data-bg="'+i+'" style="padding:'+u(8)+' '+u(14)+';background:'+(bagSel===i?'#6b4a14':'#241d12')+';border:2px solid '+(it.k==='wp'?QC[WP[it.id].q]:'#d9b25a')+';border-radius:8px;color:#f3e7c4;font-size:'+u(21)+'">'+gIc(nm,u(26))+' '+nm.n+'<span style="font-size:'+u(14)+';color:#bfae82"> '+(it.k==='xd'?'熟练':it.k==='sk'?(isSpell(it.id)?'术法':'武艺'):it.k==='gf'?'功法':'兵器')+'</span></button>';}).join('')||'<span style="color:#7a6c4a">无</span>';
-    return '<div style="width:100%;max-width:'+u(900)+'"><div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'">'+rowS('武器',ib('data-w',0,gIc(WP[weapon],u(48)),selSlot==='w0'))+rowS('武艺',sk5(0))+rowS('术法',sk5(5))+rowS('功法',gfh)+estH+'</div>'+
+    return '<div style="width:100%;max-width:'+u(900)+'"><div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'">'+rowS('武器',ib('data-w',0,gIc(WP[weapon],u(48)),selSlot==='w0'))+rowS('招式',sk5(0))+rowS('功法',gfh)+estH+'</div>'+
     '<div style="'+PAN+';flex:1 1 '+u(260)+';max-width:'+u(420)+';font-size:'+u(20)+';line-height:1.6;color:#d9cba0"><div style="color:#bfae82;font-size:'+u(18)+'">详情</div>'+dh+attrH+(Object.keys(cnt).length?'<div style="margin-top:'+u(10)+';font-size:'+u(16)+';color:#bfae82">势力共鸣：'+Object.keys(cnt).map(q=>FAC[q].n+'×'+cnt[q]).join('、')+'</div>':'')+'</div></div>'+
     '<div style="margin-top:'+u(14)+';font-size:'+u(20)+';color:#bfae82">背包'+(bagSel!=null?'（再点对应格子装备）':'（先点一件）')+'</div><div style="display:flex;gap:'+u(10)+';flex-wrap:wrap;margin-top:'+u(8)+'">'+bagH+'</div></div>';}
   function stats(){const c=(l,v)=>'<div style="flex:1 1 '+u(56)+';text-align:center;white-space:nowrap"><div style="font-size:'+u(15)+';color:#bfae82">'+l+'</div><div style="font-size:'+u(19)+';font-weight:700">'+v+'</div></div>';
@@ -624,7 +624,7 @@ function tryDash(){
 const drops=[],bag=[],loot=[];const HEALI=ITEMS[0];let settle=null,pickR=1,goldMul=1;
 function dropAt(x,y,o){if(drops.length>=80)drops.shift();drops.push(Object.assign({x:x+(Math.random()-.5)*28,y:y+(Math.random()-.5)*12,t:0,ph:Math.random()*6},o));}
 function eligibleScrolls(){const have=loadout.concat(bag.concat(loot).filter(x=>x.k==='sk').map(x=>x.id));return SKID.filter(id=>have.indexOf(id)<0&&(!TIER[id]||wave>=TMIN[TIER[id]]));}
-function gainSkill(id){const a=isSpell(id)?5:0;let e=-1;for(let i=a;i<a+5;i++)if(!loadout[i]){e=i;break;}if(e>=0){loadout[e]=id;cds[e]=0.2;buildHud();syncSel();floatTxt('习得 '+SK[id].n,'#8fe0ff');}else{bag.push({k:'sk',id});floatTxt('拾得残卷：'+SK[id].n+'（战后可换装）','#8fe0ff');}}
+function gainSkill(id){const a=0;let e=-1;for(let i=a;i<a+5;i++)if(!loadout[i]){e=i;break;}if(e>=0){loadout[e]=id;cds[e]=0.2;buildHud();syncSel();floatTxt('习得 '+SK[id].n,'#8fe0ff');}else{bag.push({k:'sk',id});floatTxt('拾得残卷：'+SK[id].n+'（战后可换装）','#8fe0ff');}}
 function lootRoll(tries){const ks=['sk','gf','wp','xd'],w=[35,25,25,15];let order=[];const pool=ks.slice(),ww=w.slice();while(pool.length){let r=Math.random()*ww.reduce((a,b)=>a+b,0),q=0;while(q<ww.length-1&&r>=ww[q]){r-=ww[q];q++;}order.push(pool[q]);pool.splice(q,1);ww.splice(q,1);}
   for(const k of order){let id=null;if(k==='xd')id=XDC[Math.floor(Math.random()*5)];else{const el=k==='sk'?eligibleScrolls():k==='gf'?eligibleGf():eligibleWp();if(!el.length)continue;let best=-1;for(let t=0;t<tries;t++){const c=el[Math.floor(Math.random()*el.length)],r=k==='sk'?(TMIN[TIER[c]]||0):k==='gf'?GTIER[GF[c].t]:WP[c].q;if(r>best){best=r;id=c;}}}
     if(id){loot.push({k,id});floatTxt('掉落：'+(k==='xd'?'心得·'+id:k==='sk'?SK[id].n:k==='gf'?GF[id].n:WP[id].n),'#8fe0ff');return;}}}
@@ -786,9 +786,9 @@ const SK={
     for(let i=0;i<N;i++){const an=t<T?i*6.2832/N:Math.atan2((py[i]-hero.y)*-SQ,(px[i]-hero.x)*-1);ctx.save();ctx.translate(px[i],py[i]*SQ-18*S);ctx.rotate(an);ctx.beginPath();ctx.arc(-10*S,0,26*S,-0.9,0.9);ctx.stroke();ctx.restore();}ctx.restore();});}}
 };
 const SKID=Object.keys(SK);for(const id of SKID)SK[id].id=id;
-let hold=0,qi=0,qt=0,stiff=0,wind=null,recov=null;const RC={huima:.3,feilun:.2,xuehe:.3,wanren:.3,dilie:.3,shuanghuan:.3,sixiang:.2,tianbeng:.4,hengsao:.3,lianzhan:.4,jian:.15,feidao:.15,qiang:.25,xuanfeng:.2,daolun:.2,jianyu:.2,huogong:.25,pili:.25,zhendi:.35,chong:.4};const WU={huima:.5,feilun:.6,xuehe:.7,wanren:.8,dilie:.7,shuanghuan:.7,sixiang:.6,tianbeng:1.0,hengsao:.6,lianzhan:.5,jian:.4,feidao:.4,qiang:.6,xuanfeng:.6,daolun:.6,jianyu:.7,huogong:.8,pili:.8,zhendi:.9,chong:1.0};let popT=0;const skipFl=new Array(10).fill(0);let loadout=['hengsao','','','','','','','','',''],cds=[0,0.4,0.8,1.2,1.6,0,0,0,0,0];
+let hold=0,qi=0,qt=0,stiff=0,wind=null,recov=null;const RC={huima:.3,feilun:.2,xuehe:.3,wanren:.3,dilie:.3,shuanghuan:.3,sixiang:.2,tianbeng:.4,hengsao:.3,lianzhan:.4,jian:.15,feidao:.15,qiang:.25,xuanfeng:.2,daolun:.2,jianyu:.2,huogong:.25,pili:.25,zhendi:.35,chong:.4};const WU={huima:.5,feilun:.6,xuehe:.7,wanren:.8,dilie:.7,shuanghuan:.7,sixiang:.6,tianbeng:1.0,hengsao:.6,lianzhan:.5,jian:.4,feidao:.4,qiang:.6,xuanfeng:.6,daolun:.6,jianyu:.7,huogong:.8,pili:.8,zhendi:.9,chong:1.0};let popT=0;const skipFl=new Array(10).fill(0);let loadout=['hengsao','','','',''],cds=[0,0.4,0.8,1.2,1.6];
 // ===== 术法 · 功法 · 武器（兵籍牒改版）=====
-const LN=10,isSpell=id=>CAT[id]==='术法';
+const LN=5,isSpell=id=>CAT[id]==='术法';
 Object.assign(CAT,{huogong:'术法',pili:'术法',luolei:'术法',lieyan:'术法',fengren:'术法',fushui:'术法',tianlei:'术法',zhenhuo:'术法'});
 Object.assign(TIER,{huogong:'黄',pili:'黄',luolei:'玄',lieyan:'玄',fengren:'地',fushui:'地',tianlei:'天',zhenhuo:'天'});
 SK.huogong.n='火符';SK.pili.n='雷符';SK.dilie.n='裂地刃';
@@ -851,13 +851,13 @@ function recalcGear(){const N={all:1,take:1,spd:1,dcd:1,hp:1,gold:1,pick:1,crit:
   allMul*=N.all/GA.all;takeMul*=N.take/GA.take;spdMul*=N.spd/GA.spd;DCD*=N.dcd/GA.dcd;goldMul*=N.gold/GA.gold;pickR*=N.pick/GA.pick;critP+=N.crit-GA.crit;
   if(N.hp!==GA.hp){const r=N.hp/GA.hp;hero.maxhp=Math.round(hero.maxhp*r);hero.hp=Math.min(hero.maxhp,Math.round(hero.hp*r));}
   Object.assign(GA,N);gearAttr={12:N.qh||0,13:N.hy||0};recalcAttr();calcXj();}
-function normLoadout(){const all=loadout.filter(x=>x);for(let i=0;i<LN;i++)loadout[i]='';for(const id of all){const a=isSpell(id)?5:0;for(let i=a;i<a+5;i++)if(!loadout[i]){loadout[i]=id;break;}}}
+function normLoadout(){const all=loadout.filter(x=>x);for(let i=0;i<LN;i++)loadout[i]='';for(const id of all){for(let i=0;i<LN;i++)if(!loadout[i]){loadout[i]=id;break;}}}
 function eligibleGf(){const have=gongfa.concat(bag.concat(loot).filter(x=>x.k==='gf').map(x=>x.id));return GFID.filter(id=>have.indexOf(id)<0&&wave>=TMIN[GF[id].t]);}
 function eligibleWp(){const have=[weapon].concat(bag.concat(loot).filter(x=>x.k==='wp').map(x=>x.id));return WPID.filter(id=>have.indexOf(id)<0&&wave>=QMIN[WP[id].q]);}
 function gainGf(id){const e=gongfa.indexOf('');if(e>=0){gongfa[e]=id;recalcGear();floatTxt('领悟 '+GF[id].n,'#ffd76a');}else{bag.push({k:'gf',id});floatTxt('拾得功法：'+GF[id].n+'（战后可换装）','#ffd76a');}}
 function gainWp(id){if(!weapon){weapon=id;recalcGear();floatTxt('装备 '+WP[id].n,'#ffd76a');}else{bag.push({k:'wp',id});floatTxt('拾得兵器：'+WP[id].n+'（战后可换装）','#ffd76a');}}
 function equipFromBag(bi,slot){const it=bag[bi];if(!it)return false;
-  if(it.k==='sk'){const sp=isSpell(it.id);if(slot==null||(slot>=5)!==sp)return false;const old=loadout[slot];loadout[slot]=it.id;cds[slot]=0.2;bag.splice(bi,1);if(old)bag.push({k:'sk',id:old});buildHud();syncSel();return true;}
+  if(it.k==='sk'){if(slot==null||slot>=LN)return false;const old=loadout[slot];loadout[slot]=it.id;cds[slot]=0.2;bag.splice(bi,1);if(old)bag.push({k:'sk',id:old});buildHud();syncSel();return true;}
   if(it.k==='gf'){if(slot==null)return false;const old=gongfa[slot];gongfa[slot]=it.id;bag.splice(bi,1);if(old)bag.push({k:'gf',id:old});recalcGear();return true;}
   if(it.k==='wp'){const old=weapon;weapon=it.id;bag.splice(bi,1);if(old)bag.push({k:'wp',id:old});recalcGear();return true;}return false;}
 const sellP=it=>Math.round((it.k==='xd'?100:it.k==='sk'?SKPRICE[TIER[it.id]||'黄']:it.k==='gf'?SKPRICE[GF[it.id].t]*1.5:WPRICE[WP[it.id].q])*0.4);
@@ -927,7 +927,7 @@ function gainProf(e){const et=ETIER[e.type]!=null?ETIER[e.type]:0,w=[1,3,8,20][e
   let ch=false;gongfa.forEach(id=>{const g=GF[id];if(!g)return;if(g.c&&!(curK&&CAT[curK.id]===g.c))return;const b=gfLv(g);gfExp[id]=(gfExp[id]||0)+gain;if(gfLv(g)>b)ch=true;});if(ch)recalcGear();}
 function gainXd(c){bag.push({k:'xd',id:c});floatTxt('拾得心得·'+c,'#ffd76a');}
 function useXd(bi,kind,i){const it=bag[bi];if(!it||it.k!=='xd')return false;if(kind==='v'){const id=loadout[i];if(!id||CAT[id]!==it.id)return false;const b=skLv(id);skExp[id]=(skExp[id]||0)+60;if(skLv(id)>b)floatTxt(SK[id].n+' 熟练升至 LV'+skLv(id),'#ffd76a');}else{const g=GF[gongfa[i]];if(!g||g.c!==it.id)return false;gfExp[g.id]=(gfExp[g.id]||0)+60;recalcGear();}bag.splice(bi,1);return true;}
-function buildHud(){skills.innerHTML='';loadout.forEach((id,i)=>{if(i>=5&&!SK[id])return;const k=SK[id],d=document.createElement('div');d.dataset.i=i;d.className='slot panel'+(k?'':' empty');d.innerHTML=(k?k.g:'+')+'<s>'+(k?k.n:'')+'</s>';skills.appendChild(d);});}
+function buildHud(){skills.innerHTML='';loadout.forEach((id,i)=>{const k=SK[id],d=document.createElement('div');d.dataset.i=i;d.className='slot panel'+(k?'':' empty');d.innerHTML=(k?k.g:'+')+'<s>'+(k?k.n:'')+'</s>';skills.appendChild(d);});}
 buildHud();
 function startPick(){const card=(t,d,id)=>'<button data-w="'+id+'" style="width:calc(var(--u)*230);padding:calc(var(--u)*18);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#fff;text-align:left"><div style="font-size:calc(var(--u)*30);font-weight:700">'+t+'</div><div style="font-size:calc(var(--u)*20);color:#bfae82;margin-top:6px">'+d+'</div></button>';
   showOv('<div style="font-size:calc(var(--u)*46);font-weight:700">选择开局兵器</div><div style="font-size:calc(var(--u)*22);color:#bfae82">同类武艺威力 ×1.3，其他类 ×0.7</div><div style="display:flex;gap:calc(var(--u)*16);flex-wrap:wrap;justify-content:center">'+card('大刀 / 剑','短兵：开局自动习得横扫','d')+card('长枪','长兵：枪刺','q')+card('弓','射艺：箭雨、飞刀','g')+'</div>');
