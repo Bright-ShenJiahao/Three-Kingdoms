@@ -36,7 +36,7 @@ old=open(P('src','greybox.template.html'),encoding='utf-8').read()
 head=old[:old.index('<script>')]
 head=head.replace('<h4>同屏敌人数量</h4>','<h4>地面压扁（1 = 不压扁，越小越斜）</h4>\n  <label><input id="sQ" type="range" min="0.5" max="1" step="0.05" value="0.7"> <span id="vQ"></span></label>\n  <h4>同屏敌人数量</h4>')
 head=(head.replace('灰盒测试：黄巾荒场','灰盒测试 3：无尽战场').replace('value="0.85"','value="1"').replace('<h4>入场提示</h4>\n  <button id="bGua">立刻触发一次</button>\n  <label><input id="cAuto" type="checkbox" checked> 每 10 秒自动触发</label>','<h4>波次</h4>\n  <button id="bGua">立刻结束本波</button>\n  <label style="display:none"><input id="cAuto" type="checkbox"></label>').replace('<label><input id="cSnap" type="checkbox"> 像素整数缩放（开启后主角只有 1 倍/2 倍两档大小）</label>','<label style="display:none"><input id="cSnap" type="checkbox"></label>').replace('max="150" step="5" value="60"','max="320" step="10" value="250"')
- .replace('<button data-boss="zhang_jiao">张角</button><button data-boss="zhang_liang">张梁</button><button data-boss="zhang_bao">张宝</button>','<button data-boss="brute">大力士</button>')
+ .replace('<button data-boss="zhang_jiao">张角</button><button data-boss="zhang_liang">张梁</button><button data-boss="zhang_bao">张宝</button>','<button data-boss="brute">大力士</button><button data-boss="zhangbao">张宝</button><button data-boss="zhangliang">张梁</button><button data-boss="bocai">波才(骑马)</button><button data-boss="bocai2">波才(下马)</button><button data-boss="zhangjiao">张角</button><button data-boss="lamp">法灯</button>')
  .replace('<h4>Boss（各一个）</h4>','<h4>大个子（各一个）</h4>')
  .replace('「刀·剑气」，闪身时不能攻击；击倒的敌人会从场边入场点补进来。','「刀·剑气」，闪身时不能攻击。无尽地图，每 40 秒一波，波间停顿；10 分钟一局，9 分钟刷大个子（张角占位）。美术来自骑兵幸存者仓库（主角骑马、敌人是波斯步兵，均为占位）。')
  .replace('value="5" max="150"','value="5" max="150"'))

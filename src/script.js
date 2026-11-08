@@ -820,7 +820,7 @@ function update(dt){
   comboT-=dt;if(comboT<=0)combo=0;
   // 补兵：低于目标数就在视野外补
   let cnt=0;for(const e of enemies)if(!TYPES[e.type].boss)cnt++;
-  const tn=Math.ceil(targetN()*Math.min(1,0.12+0.88*waveT/Math.min(24,WT()*0.5)));if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){spawnT-=dt;if(spawnT<=0){spawn(pickType());spawnT=0.14;}}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,6+Math.floor(Math.random()*6));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
+  const RP=Math.min(30,WT()*0.6),rf=Math.min(1,0.04+0.96*waveT/RP),tn=Math.ceil(targetN()*rf);if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){spawnT-=dt;if(spawnT<=0){spawn(pickType());spawnT=rf<1?0.45-0.3*rf:0.14;}}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,rf<1?2+Math.floor(Math.random()*2):6+Math.floor(Math.random()*6));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
     statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}if(tipT>0){tipT-=dt;if(tipT<=0)tipEl.style.display='none';}if(hitsTaken!==_lh){_lh=hitsTaken;calmT=0;}else calmT+=dt;if(!tipSeen.crowd){if(nearest(8,45).length>=6)crowdT+=dt;else crowdT=0;if(crowdT>2.5&&calmT>3)showTip('crowd','被围住也不用慌：不会被所有人同时打，<b style="color:#ffd86a">只有抬手出招的敌人才伤你</b>。','刘备',7);}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
