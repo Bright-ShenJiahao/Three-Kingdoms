@@ -375,7 +375,7 @@ const FACOF={};for(const k in FAC)(FAC[k].tags||[]).forEach(t=>FACOF[t]=k);
 function applyFac(id){fac=id;if(FAC[id])applyFx(FAC[id].fx);}
 function calcGrade(win){const sc=Math.round((Math.min(wave,WAVES)/WAVES)*40+(win?20:0)+(win?hero.hp/hero.maxhp*10:0)+(hitsTaken<=5?15:hitsTaken<=12?8:hitsTaken<=25?3:0)+Math.min(10,kills/40)+Math.min(5,comboMax/30));
  const g=sc>=85?'名将':sc>=70?'校尉':sc>=55?'都伯':sc>=35?'伍长':'小卒';return {score:sc,grade:g};}
-function hurt(e,d,dx,dy,kb){if(e.inv||e.hide)return;if(ampT>0)d*=1.4;d*=profMul()*titleMul(e);const cc0=curK?CAT[curK.id]:'';if(hasGf('xingyun')&&shi)d*=1+.06*shi;if(hasGf('beishui')&&hero.hp<hero.maxhp*.3)d*=1.25;const lf=hasGf('lhj')&&noHitT>=3;if(lf){noHitT=0;floatTxt('连环劲','#ffd76a');}const crit=lf||Math.random()<critP+(xj.critC[cc0]||0);if(crit)d*=1.5+critDmg()+(xj.critD[cc0]||0);if(dnums.length<50)dnums.push({x:e.x+(Math.random()*14-7),y:e.y,t:0,v:Math.max(1,Math.round(d*10)),crit});if(crit||e.type==='brute'||e.type==='brute2'){stopT=Math.max(stopT,crit?0.05:0.035);shk=Math.max(shk,crit?5:3);}e.hitT=0.2;e.flashT=0.09;sfx((e.hp-d<=0)?'kill':(e.type==='immortal'?'shield':'hit'));if(fxs.length<140)spark(e.x,e.y,dx,dy);if(curK)dmgSt[curK.id]=(dmgSt[curK.id]||0)+Math.round(Math.min(d,Math.max(e.hp,0)+0.0001)*10);if(!isFinite(dx)||!isFinite(dy)){dx=0;dy=0;}e.hp-=d;if(e.hp<=0){const j=enemies.indexOf(e);if(j>=0)kill(j,{dx,dy});}else{kb*=(TYPES[e.type].kbm||1);e.x+=dx*kb;e.y+=dy*kb/SQ;}}
+function hurt(e,d,dx,dy,kb){if(e.inv||e.hide||retreatT>0)return;if(ampT>0)d*=1.4;d*=profMul()*titleMul(e);const cc0=curK?CAT[curK.id]:'';if(hasGf('xingyun')&&shi)d*=1+.06*shi;if(hasGf('beishui')&&hero.hp<hero.maxhp*.3)d*=1.25;const lf=hasGf('lhj')&&noHitT>=3;if(lf){noHitT=0;floatTxt('连环劲','#ffd76a');}const crit=lf||Math.random()<critP+(xj.critC[cc0]||0);if(crit)d*=1.5+critDmg()+(xj.critD[cc0]||0);if(dnums.length<50)dnums.push({x:e.x+(Math.random()*14-7),y:e.y,t:0,v:Math.max(1,Math.round(d*10)),crit});if(crit||e.type==='brute'||e.type==='brute2'){stopT=Math.max(stopT,crit?0.05:0.035);shk=Math.max(shk,crit?5:3);}e.hitT=0.2;e.flashT=0.09;sfx((e.hp-d<=0)?'kill':(e.type==='immortal'?'shield':'hit'));if(fxs.length<140)spark(e.x,e.y,dx,dy);if(curK)dmgSt[curK.id]=(dmgSt[curK.id]||0)+Math.round(Math.min(d,Math.max(e.hp,0)+0.0001)*10);if(!isFinite(dx)||!isFinite(dy)){dx=0;dy=0;}e.hp-=d;if(e.hp<=0){const j=enemies.indexOf(e);if(j>=0)kill(j,{dx,dy});}else{kb*=(TYPES[e.type].kbm||1);e.x+=dx*kb;e.y+=dy*kb/SQ;}}
 function aimDir(){const n=nearest(1,600)[0];if(n){const ex=n.x-hero.x,ey=(n.y-hero.y)*SQ,l=Math.hypot(ex,ey)||1;return [ex/l,ey/l];}return [Math.cos(hero.fa),Math.sin(hero.fa)];}
 function rndPts(k,maxd){maxd*=0.6;const ts=nearest(30,maxd).sort(()=>Math.random()-0.5).slice(0,k).map(e=>[e.x,e.y]);while(ts.length<k){const a=Math.random()*6.283,r=80+Math.random()*150;ts.push([hero.x+Math.cos(a)*r,hero.y+Math.sin(a)*r/SQ]);}return ts;}
 function inC(x,y,r,f){for(const e of enemies.slice()){const dx=e.x-x,dy=(e.y-y)*SQ;if(dx*dx+dy*dy<(r+TYPES[e.type].r*S*0.6)**2)f(e,dx,dy);}}
@@ -804,7 +804,7 @@ function update(dt){
     else if(recov){recov.t+=dt;if(recov.t>=recov.dur){recov=null;qt=-0.5;}}
     else if(!hasEnemy(560)){qt=0;}
     else{for(let n=0;n<LN&&!SK[loadout[qi]];n++)qi=(qi+1)%LN;qt+=dt;if(qt>=0.05){const k=SK[loadout[qi]];
-      if(k&&cds[qi]<=0&&(!k.need||nearest(1,k.need).length)){wind={i:qi,k,t:0,dur:(WU[loadout[qi]]||0.3)*1.2};hold=0;}
+      if(k&&retreatT<=0&&cds[qi]<=0&&(!k.need||nearest(1,k.need).length)){wind={i:qi,k,t:0,dur:(WU[loadout[qi]]||0.3)*1.2};hold=0;}
       else if(k&&((cds[qi]>0&&cds[qi]<=0.8)||(cds[qi]<=0&&hold<1.2))){hold+=0.05;qt=0;}
       else{skipFl[qi]=0.2;qt=-0.05;qi=(qi+1)%LN;hold=0;}}}}
   for(let i=fxs.length-1;i>=0;i--){const f=fxs[i];f.t+=dt;if(f.upd)f.upd(dt,f.t);if(f.t>f.life)fxs.splice(i,1);}
@@ -828,7 +828,7 @@ function update(dt){
   if(!bossPhase&&retreatT<=0&&waveRow().gen&&waveT>=WT()*0.65&&!genDone[wave]){genDone[wave]=1;spawn('brute');floatTxt('敌将出阵','#ff7a5a');}
   if(bossPhase){if(!won&&!enemies.some(e=>TYPES[e.type].boss))heroWin();}
   else if(retreatT>0){retreatT-=dt;if(retreatT<=0){enemies.length=0;if(wave>=WAVES)startBoss();else endWave();}}
-  else if(waveT>=WT()){retreatT=RT;}
+  else if(waveT>=WT()){retreatT=RT;wind=null;}
 }
 
 let kk=1;
