@@ -799,7 +799,7 @@ function update(dt){
   for(let i=0;i<LN;i++)cds[i]-=dt;zq=Math.min(zqMax,zq+(1+0.6*aEff(13))*dt);
   for(let i=echoQ.length-1;i>=0;i--){const q=echoQ[i];q.t-=dt;if(q.t<=0){echoQ.splice(i,1);curK=q.k;echoOn=true;try{q.k.cast();}catch(_){}echoOn=false;curK=null;}}
   if(!hero.dash&&stiff<=0){
-    if(wind){wind.t+=dt;if(!hero.moving){const [ax,ay]=aimDir();hero.fa=Math.atan2(ay,ax);}if(wind.t>=wind.dur){const k=wind.k;cds[wind.i]=k.cd*wpCd;popPose='fore';yunOn=false;if(yun[wind.i]){const yc=YC[TIER[k.id]]||4;if(zq>=yc){zq-=yc;yunOn=true;}}setRM();curK=k;k.cast();curK=null;yunOn=false;setRM();if(skLv(k.id)>=10)echoQ.push({t:0.35,k});popT=0.35;recov={t:0,dur:RC[loadout[wind.i]]||0.2};wind=null;qt=0;qi=(qi+1)%LN;}}
+    if(wind){wind.t+=dt;if(!hero.moving){const [ax,ay]=aimDir();hero.fa=Math.atan2(ay,ax);}if(wind.t>=wind.dur){const k=wind.k;cds[wind.i]=k.cd*wpCd;popPose='fore';yunOn=false;if(yun[wind.i]){const yc=YC[TIER[k.id]]||4;if(zq>=yc){zq-=yc;yunOn=true;}else floatTxt('真气不足','#8fd0ff');}setRM();curK=k;k.cast();curK=null;yunOn=false;setRM();if(skLv(k.id)>=10)echoQ.push({t:0.35,k});popT=0.35;recov={t:0,dur:RC[loadout[wind.i]]||0.2};wind=null;qt=0;qi=(qi+1)%LN;}}
     else if(recov){recov.t+=dt;if(recov.t>=recov.dur){recov=null;qt=-0.5;}}
     else if(!hasEnemy(560)){qt=0;}
     else{for(let n=0;n<LN&&!SK[loadout[qi]];n++)qi=(qi+1)%LN;qt+=dt;if(qt>=0.05){const k=SK[loadout[qi]];
