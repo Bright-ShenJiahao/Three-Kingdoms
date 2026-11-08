@@ -271,7 +271,7 @@ function spawn(type,rad,ang){
   enemies.push({type,x:hero.x+Math.cos(a)*r,y:hero.y+Math.sin(a)*r/SQ,hp:TYPES[type].boss?TYPES[type].hp:TYPES[type].hp*(TYPES[type].hp>=6?2:3)*(1+HP_SCALE*Math.max(0,wave-1)),wk:Math.random()*6,fa:0});
 }
 function targetN(){const cap=innerWidth<innerHeight||innerWidth<700?100:150;const row=waveRow();return Math.min(N,cap,row.n+Math.max(0,wave-WAVE_TABLE.length)*14);}
-for(let i=0;i<70;i++)spawn(pickType(),90+Math.random()*(ringR()*1.1));
+for(let i=0;i<5;i++)spawn(pickType(),140+Math.random()*(ringR()*0.9));let spawnT=0;
 function setN(v){N=v;$('vN').textContent=v;}setN(250);
 $('gear').onclick=()=>$('panel').classList.toggle('open');
 $('sS').oninput=e=>{S=+e.target.value;};
@@ -628,7 +628,7 @@ buildHud();
 function startPick(){const card=(t,d,id)=>'<button data-w="'+id+'" style="width:calc(var(--u)*230);padding:calc(var(--u)*18);background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#fff;text-align:left"><div style="font-size:calc(var(--u)*30);font-weight:700">'+t+'</div><div style="font-size:calc(var(--u)*20);color:#bfae82;margin-top:6px">'+d+'</div></button>';
   showOv('<div style="font-size:calc(var(--u)*46);font-weight:700">选择开局兵器</div><div style="font-size:calc(var(--u)*22);color:#bfae82">同类武艺威力 ×1.3，其他类 ×0.7</div><div style="display:flex;gap:calc(var(--u)*16);flex-wrap:wrap;justify-content:center">'+card('大刀 / 剑','短兵：开局自动习得横扫','d')+card('长枪','长兵：枪刺','q')+card('弓','射艺：箭雨、飞刀','g')+'</div>');
   ov.querySelectorAll('button[data-w]').forEach(b=>b.onclick=()=>{const w=b.dataset.w;mainCat=w=='d'?'短兵':w=='q'?'长兵':'射艺';oAttr=w=='d'?OA[0]:w=='q'?OA[2]:OA[1];recalcAttr();zq=zqMax;
-    const L=w=='d'?['hengsao','','','','']:w=='q'?['qiang','','','','']:['jianyu','feidao','','',''];
+    const L=w=='d'?['hengsao','','','','']:w=='q'?['qiang','','','','']:['jianyu','','','',''];
     weapon='wp0';recalcGear();for(let i=0;i<5;i++){loadout[i]=L[i];cds[i]=0.2*i;}normLoadout();buildHud();syncSel();started=true;paused=false;ov.style.display='none';});}
 function syncSel(){document.querySelectorAll('#panel select').forEach((sel,i)=>{if(i<5)sel.value=loadout[i]||'';});}
 (function(){const p=$('panel'),h=document.createElement('div');h.innerHTML='<h4>武艺（5 格自动释放）</h4>';
@@ -638,7 +638,7 @@ function syncSel(){document.querySelectorAll('#panel select').forEach((sel,i)=>{
  const h2=document.createElement('div');h2.innerHTML='<h4>敌人攻击强度</h4>';const sl=document.createElement('select');sl.style.cssText='width:100%;background:#241d36;color:#eee;border:1px solid #6b5a8a;border-radius:6px;padding:3px';
  sl.innerHTML='<option value="0">关（敌人不攻击）</option><option value="0.5">轻</option><option value="1" selected>标准</option><option value="1.6">重</option>';sl.onchange=()=>{atkMul=+sl.value;};h2.appendChild(sl);h.appendChild(h2);
  p.insertBefore(h,p.firstChild);})();
-(function(){const C=window.__CFG;const O=[['短兵',['hengsao','lianzhan','','','']],['射艺',['jianyu','feidao','','','']],['长兵',['qiang','','','','']],['长兵',['qiang','','','','']],['术法',['huogong','','','','']]];
+(function(){const C=window.__CFG;const O=[['短兵',['hengsao','','','','']],['射艺',['jianyu','','','','']],['长兵',['qiang','','','','']],['长兵',['qiang','','','','']],['术法',['huogong','','','','']]];
   if(C&&C.title){titleId=C.title;applyTitle(C.title);}applyFac((C&&C.faction)||'xiangyong');
   if(C&&C.o!=null){const o=O[C.o]||O[0];mainCat=o[0];oAttr=OA[C.o]||OA[0];recalcAttr();zq=zqMax;weapon=['wp0','wp3','wp2','wp2','wp1'][C.o]||'wp0';recalcGear();for(let i=0;i<5;i++){loadout[i]=o[1][i];cds[i]=0.2*i;}normLoadout();buildHud();syncSel();started=true;paused=true;playStory([{w:'刘备',t:'中平元年，黄巾起于钜鹿，烽火已烧到涿郡城下。'},{w:'刘备',t:'{名}，你虽是乡野农夫，却肯在此时拿起刀，备心中有数。'},{w:'张飞',t:'大哥说得对！这些戴黄头巾的杂碎，先让俺老张看看你的刀快不快！'},{w:'刘备',t:'活下来，撑到鸣金收兵。八波之后，那张角自会现身。'}],()=>{paused=false;});}else startPick();})();
 (function(){const b=document.createElement('button');b.textContent='退';b.title='弃战退出';b.style.cssText='position:absolute;left:calc(var(--u)*8);top:calc(var(--u)*64);z-index:7;width:calc(var(--u)*44);height:calc(var(--u)*44);border-radius:50%;border:1px solid #6b5a8a;background:rgba(20,14,30,.6);color:#bfae82;font-size:calc(var(--u)*20);opacity:.7';
@@ -820,7 +820,7 @@ function update(dt){
   comboT-=dt;if(comboT<=0)combo=0;
   // 补兵：低于目标数就在视野外补
   let cnt=0;for(const e of enemies)if(!TYPES[e.type].boss)cnt++;
-  const tn=targetN();if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){for(let k=0;k<3&&cnt<tn;k++,cnt++)spawn(pickType());}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,8+Math.floor(Math.random()*8));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
+  const tn=Math.ceil(targetN()*Math.min(1,0.12+0.88*waveT/Math.min(24,WT()*0.5)));if(!bossPhase&&retreatT<=0){if(cnt<tn*0.5){spawnT-=dt;if(spawnT<=0){spawn(pickType());spawnT=0.14;}}else{batchT-=dt;if(batchT<=0&&cnt<tn){const k=Math.min(tn-cnt,6+Math.floor(Math.random()*6));for(let q=0;q<k;q++)spawn(pickType());batchT=1.6+Math.random()*1.4;}}}
   {const dd=Math.hypot(hero.x,hero.y),R0=bndR();const out=dd>R0;edgeO=out?1:0;edgeAng=Math.atan2(hero.y*SQ,hero.x);offT=out?offT+dt:Math.max(0,offT-dt*2.5);moraleMul=1-0.3*Math.min(1,Math.max(0,(offT-3)/5));
     if(moraleMul<1){edgeEl.style.display='block';edgeEl.textContent='阵脚已乱　士气低落　伤害 -'+Math.round((1-moraleMul)*100)+'%';if(!offMsg){offMsg=true;floatTxt('阵脚已乱','#ff9a6a');}}else{edgeEl.style.display='none';if(offT<=0)offMsg=false;}
     statusT-=dt;if(statusT<=0){statusT=0.15;renderStatus();}if(tipT>0){tipT-=dt;if(tipT<=0)tipEl.style.display='none';}if(hitsTaken!==_lh){_lh=hitsTaken;calmT=0;}else calmT+=dt;if(!tipSeen.crowd){if(nearest(8,45).length>=6)crowdT+=dt;else crowdT=0;if(crowdT>2.5&&calmT>3)showTip('crowd','被围住也不用慌：不会被所有人同时打，<b style="color:#ffd86a">只有抬手出招的敌人才伤你</b>。','刘备',7);}const gt=(genDone[wave]&&!bossPhase)?0.9:1;gs+=(gt-gs)*Math.min(1,dt*1.5);}
