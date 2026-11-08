@@ -16,6 +16,7 @@ def newart(h):
     A=_j.loads(h[i+8:j])
     A['img']={k:v for k,v in A['img'].items() if not (k.startswith('hw_') or k.startswith('spara_'))}
     A['img']['hero_atlas']=b64(P('art','hero_art','hero_atlas_q.png'));A['img']['enemy_atlas']=b64(P('art','enemy_art','enemy_atlas_q.png'))
+    for _k,_p in [('wp0',('assets','wp','wp0.png')),('wp1',('assets','wp','wp1.png')),('wp2',('assets','wp','wp2.png')),('wp3',('assets','wp','wp3.png'))]+[('sk_'+_s,('assets','ic','sk_'+_s+'.png')) for _s in ('hengsao','jianyu','qiang','huogong')]: A['img'][_k]=b64(P(*_p))
     A['meta']['atlas']=HA;A['meta']['eatlas']=EAJ
     h=h[:i]+'const A='+_j.dumps(A,ensure_ascii=False)+h[j:]
     NEW="""const _HA=META.atlas,_EA=META.eatlas;
