@@ -829,7 +829,7 @@ const WP={};
 [['环首刀','🗡',0,{}],['铁剑','⚔',0,{spd:1.02}],['木杆枪','🔱',0,{hp:1.05}],['猎弓','🏹',0,{pick:1.1}],
  ['百炼刀','🗡',1,{take:.97}],['青铜剑','⚔',1,{spd:1.03}],['铁杆枪','🔱',1,{hp:1.07}],['角弓','🏹',1,{gold:1.06}],
  ['青虹剑','⚔',2,{dcd:.92}],['雁翎枪','🔱',2,{take:.95}],['斩马刀','🗡',2,{crit:.03}],['紫檀弓','🏹',2,{gold:1.1}],
- ['七星刀','🗡',3,{all:1.05}],['落日弓','🏹',3,{gold:1.15,pick:1.1}],['倚天剑','⚔',3,{crit:.05,spd:1.05}],['龙胆枪','🔱',3,{all:1.06,hp:1.06}]].forEach(([n,g,q,x],i)=>{WP['wp'+i]={n,g,q,atk:WQ.atk[q],cd:WQ.cd[q],crit:WQ.crit[q],x};});
+ ['屠龙刀','🗡',3,{all:1.05}],['落日弓','🏹',3,{gold:1.15,pick:1.1}],['倚天剑','⚔',3,{crit:.05,spd:1.05}],['龙胆枪','🔱',3,{all:1.06,hp:1.06}]].forEach(([n,g,q,x],i)=>{WP['wp'+i]={n,g,q,atk:WQ.atk[q],cd:WQ.cd[q],crit:WQ.crit[q],x};});
 const WPID=Object.keys(WP),QMIN=[0,2,5,8];
 let gongfa=['','',''],weapon='',gfExp={},gearAll=1,gearCat={},critP=0.1,wpCd=1;const GA={all:1,take:1,spd:1,dcd:1,hp:1,gold:1,pick:1,crit:0};let gfLvPrev={};
 const TH=[0,20,55,110,190,300,450,650,920,1280],lvOf=n=>{let l=1;for(let i=1;i<10;i++)if(n>=TH[i])l=i+1;return l;};
