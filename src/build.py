@@ -9,8 +9,8 @@ def meta(p):
     s=open(p).read(); return json.loads(s[s.index('={"')+1:].rstrip().rstrip(';'))
 img={}; M={}
 for k in ['grass','dirt','trod','mud']:
-    im=Image.open('%s/ground/%s.jpg'%(R,k)).convert('RGB'); buf=io.BytesIO(); im.save(buf,'JPEG',quality=82)
-    img['g_'+k]='data:image/jpeg;base64,'+base64.b64encode(buf.getvalue()).decode()
+    im=Image.open('%s/ground/%s.png'%(R,k)).convert('RGB').quantize(colors=96,method=Image.MEDIANCUT,dither=Image.NONE); buf=io.BytesIO(); im.save(buf,'PNG',optimize=True)
+    img['g_'+k]='data:image/png;base64,'+base64.b64encode(buf.getvalue()).decode()
 props=meta(R+'/props/meta.js'); M['props']=props
 for k in props: img['p_'+k]=b64('%s/props/%s.png'%(R,k))
 for _k,_n in (('immortal',6),('pcav8',8),('comp8',8)):
