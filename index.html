@@ -484,6 +484,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   <label><input id="sS" type="range" min="0.5" max="2" step="0.05" value="1"> <span id="vS"></span></label>
   <label style="display:none"><input id="cSnap" type="checkbox"></label>
   <h4>地面</h4>
+  <label><input id="cAtm" type="checkbox"> 氛围（暖色调 / 暗角 / 远景雾）</label>
   <label>地图布局 <select id="sLay"><option value="classic">经典（零星泥地）</option><option value="war">战场（大片泥地+痕迹）</option><option value="road">驿道（土路贯穿）</option><option value="swamp">沼泽（泥洼+水塘）</option></select></label>
   <label><input id="cGd" type="checkbox"> 高清写实地面（取消勾选 = 像素地面；快捷键 G）</label>
   <h4>地面压扁（1 = 不压扁，越小越斜）</h4>
@@ -780,7 +781,7 @@ function hsh(x,y,k){let n=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math
 // ===== 无尽地面：分块渲染，每块缓存成画布（做法同骑兵幸存者）=====
 const GS=1.5,TILE=250,CHUNK=512,PK=0.6;
 let GV=(()=>{try{return localStorage.getItem('gvHD')==='1'?'2':'';}catch(e){return '';}})();
-let GKEY='';let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return 'classic';}})();
+let ATM=(()=>{try{return localStorage.getItem('atm')!=='0';}catch(e){return true;}})();let GKEY='';let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return 'classic';}})();
 const chunks=new Map();
 const GNf=()=>GV?Math.max(1,Math.round(kk*0.94)):Math.max(1,Math.round(kk*0.73));
 function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const n=GNf();p.setTransform(new DOMMatrix([n,0,0,n,-ox,-oy]));return p;}
@@ -812,6 +813,7 @@ function blob(c,gx0,gy0,k,x,y,r,a,core){
   c.drawImage(tmp,0,0,W,Hh,lx,ly,W,Hh);
 }
 function put(c,gx0,gy0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c.imageSmoothingEnabled=true;c.drawImage(im,(x-M.ax*s)*kk-gx0,(y-M.ay*s)*kk*SQ-gy0,M.w*s*kk,M.h*s*kk*SQ);}
+const gmc={};function gMean(){const key='g'+GV+'_grass';if(gmc[key])return gmc[key];const q=document.createElement('canvas');q.width=q.height=1;const x=q.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(IMG[key],0,0,1,1);const d=x.getImageData(0,0,1,1).data;return gmc[key]='rgb('+d[0]+','+d[1]+','+d[2]+')';}
 function buildChunk(ci,cj){
   const gx0=Math.round(ci*CHUNK*kk),gy0=Math.round(cj*CHUNK*kk*SQ),gx1=Math.round((ci+1)*CHUNK*kk)+1,gy1=Math.round((cj+1)*CHUNK*kk*SQ)+1;
   const cv2=document.createElement('canvas');cv2.width=gx1-gx0;cv2.height=gy1-gy0;cv2._gx=gx0;cv2._gy=gy0;const c=cv2.getContext('2d'),x0=ci*CHUNK,y0=cj*CHUNK;c.imageSmoothingEnabled=!!GV;
@@ -848,6 +850,16 @@ function buildChunk(ci,cj){
     else if(r<(LY==='war'?.4:.46))put(c,gx0,gy0,['rubble','flat'][Math.floor(hsh(i,j,306)*2)],x,y,1);
     else if(r<.49)put(c,gx0,gy0,'dec'+(1+Math.floor(hsh(i,j,307)*3)),x,y,.9);
   }
+  if(ATM){
+    const gm=gMean();c.globalAlpha=.3;c.fillStyle=gm;c.fillRect(0,0,cv2.width,cv2.height);c.globalAlpha=1;
+    const WS=650;
+    for(let i=Math.floor((x0-500)/WS);i<=Math.floor((x0+CHUNK+500)/WS);i++)for(let j=Math.floor((y0-500)/WS);j<=Math.floor((y0+CHUNK+500)/WS);j++){
+      const x=i*WS+hsh(i,j,401)*WS,y=j*WS+hsh(i,j,402)*WS,R=(260+hsh(i,j,403)*300)*kk,warm=hsh(i,j,404)<.5;
+      const cx=x*kk-gx0,cy=y*kk*SQ-gy0;if(cx+R<0||cx-R>cv2.width||cy+R*SQ<0||cy-R*SQ>cv2.height)continue;
+      c.save();c.translate(cx,cy);c.scale(1,SQ);const g=c.createRadialGradient(0,0,0,0,0,R);const col=warm?'255,200,90':'50,120,70';
+      g.addColorStop(0,'rgba('+col+','+(warm?.17:.15)+')');g.addColorStop(1,'rgba('+col+',0)');c.fillStyle=g;c.fillRect(-R,-R,2*R,2*R);c.restore();
+    }
+  }
   return cv2;
 }
 // ===== 参与深度排序的大件：按格子确定性生成 =====
@@ -871,7 +883,7 @@ function cellProps(i,j){
 const tcache=new Map();
 function tuftCell(i,j){const key=i+','+j;let L=tcache.get(key);if(L)return L;L=[];const CL=110;
   const x=i*CL+hsh(i,j,301)*CL,y=j*CL+hsh(i,j,302)*CL,r=hsh(i,j,303);
-  if(r<.42)L.push({k:'tuft'+(1+Math.floor(hsh(i,j,304)*4)),x,y,s:.8+hsh(i,j,305)*.5,fl:1});
+  if(r<(ATM?.18:.42))L.push({k:'tuft'+(1+Math.floor(hsh(i,j,304)*4)),x,y,s:.8+hsh(i,j,305)*.5,fl:1});
   tcache.set(key,L);if(tcache.size>1500)tcache.delete(tcache.keys().next().value);return L;}
 const $=id=>document.getElementById(id);
 const stage=$('stage'),cv=$('cv'),ctx=cv.getContext('2d');
@@ -1067,6 +1079,7 @@ $('sQ').oninput=e=>{SQ=+e.target.value;};
 const setGV=hd=>{GV=hd?'2':'';chunks.clear();try{localStorage.setItem('gvHD',hd?'1':'0');}catch(e){}const c=$('cGd');if(c)c.checked=!!hd;};
 const setLay=v=>{LAY=v;chunks.clear();try{localStorage.setItem('lay',v);}catch(e){}$('sLay').value=v;};
 $('sLay').value=LAY;$('sLay').onchange=e=>setLay(e.target.value);
+$('cAtm').checked=ATM;$('cAtm').onchange=e=>{ATM=e.target.checked;chunks.clear();tcache.clear();try{localStorage.setItem('atm',ATM?'1':'0');}catch(_){}};
 $('cGd').checked=!!GV;$('cGd').onchange=e=>setGV(e.target.checked);
 addEventListener('keydown',e=>{if((e.key==='g'||e.key==='G')&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setGV(!GV);});
 $('cHud').onchange=e=>{$('hud').classList.toggle('off',!e.target.checked);};
@@ -1698,7 +1711,7 @@ function draw(){
   const cx=hero.x,cy=hero.y,x0=cx-vw/2,y0=cy-vwy/2;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8a7444';ctx.fillRect(0,0,W,H);
   // 地面：纵向压扁（同骑兵幸存者的 2.5D）
-  ctx.setTransform(1,0,0,1,0,0);const gk=[Math.round(kk*100),SQ,GV,LAY].join('|');if(gk!==GKEY){GKEY=gk;chunks.clear();}
+  ctx.setTransform(1,0,0,1,0,0);const gk=[Math.round(kk*100),SQ,GV,LAY,ATM].join('|');if(gk!==GKEY){GKEY=gk;chunks.clear();}
   ctx.imageSmoothingEnabled=false;const camX=Math.round(x0*kk),camY=Math.round(y0*kk*SQ);
   let budget=8;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
@@ -1740,6 +1753,10 @@ function draw(){
   for(const p of slashes)drawCrescent(p);
   for(const f of fxs)f.drw&&f.drw(f.t);
   for(const p of arrows){ctx.save();ctx.strokeStyle='#f6e6b0';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(p.x,p.y*SQ-18*S);ctx.lineTo(p.x+p.dx*14*S,p.y*SQ-18*S+p.dy*14*S);ctx.stroke();ctx.restore();}
+  if(ATM){ctx.save();ctx.setTransform(1,0,0,1,0,0);const cw=cv.width,ch=cv.height;
+    ctx.globalCompositeOperation='soft-light';ctx.fillStyle='rgba(255,170,80,.32)';ctx.fillRect(0,0,cw,ch);ctx.globalCompositeOperation='source-over';
+    let g=ctx.createLinearGradient(0,0,0,ch*.45);g.addColorStop(0,'rgba(236,206,152,.30)');g.addColorStop(1,'rgba(236,206,152,0)');ctx.fillStyle=g;ctx.fillRect(0,0,cw,ch*.45);
+    g=ctx.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.38,cw/2,ch/2,Math.hypot(cw,ch)*.58);g.addColorStop(0,'rgba(30,14,4,0)');g.addColorStop(1,'rgba(30,14,4,.42)');ctx.fillStyle=g;ctx.fillRect(0,0,cw,ch);ctx.restore();}
   if(retreatT>0){ctx.save();ctx.setTransform(1,0,0,1,0,0);const cw=cv.width,ch=cv.height,al=Math.min(1,retreatT/0.4,(RT-retreatT)/0.2);ctx.globalAlpha=al;ctx.font='bold '+(ch*0.12)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=ch*0.012;ctx.strokeStyle='#000';ctx.fillStyle='#ffd86a';ctx.strokeText('鸣金收兵',cw/2,ch*0.38);ctx.fillText('鸣金收兵',cw/2,ch*0.38);ctx.restore();}
   for(const n of dnums){const k=n.t/0.7;ctx.save();ctx.globalAlpha=Math.min(1,(1-k)*1.6);ctx.font='bold '+((n.crit?19:13)*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=n.crit?'#ffb030':'#fff';const ty=n.y*SQ-34*S-k*26*S-(n.crit?Math.sin(Math.min(1,k*3)*Math.PI)*8:0);ctx.strokeText(n.v,n.x,ty);ctx.fillText(n.v,n.x,ty);ctx.restore();}
   for(const t of texts){ctx.save();ctx.globalAlpha=Math.max(0,1-t.t);ctx.font='bold '+(16*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=t.c;const ty=t.y*SQ-60*S-t.t*28;ctx.strokeText(t.s,t.x,ty);ctx.fillText(t.s,t.x,ty);ctx.restore();}
