@@ -620,7 +620,7 @@ const EVENTS=[
 // ---- 掉落与成长 ----
 const ETIER={};SECTS.forEach(S=>S.u.forEach((id,i)=>ETIER[id]=i));ETIER.brute=3;ETIER.brute2=2;
 // 按敌人档位 [杂兵,精英,小头目,首领]：杂兵60%直接给1银；银两需拾取；物品/刀法残卷概率
-const DROP={coin:0.6,silver:[0,5,15,60],item:[0.01,0.06,0.35,1],scroll:[0,0.03,0.2,1],gf:[0,0.015,0.1,1],wp:[0,0.015,0.1,1],xd:[0,0.03,0.18,1]};
+const DROP={coin:0.6,silver:[0,5,15,60],heal:[0.03,0.04,0.10,0],item:[0,0,0.08,1],gear:[0,0.004,0.10,1]};
 const SKPRICE={'黄':40,'玄':90,'地':160,'天':260};
 const ITEMS=[
  {n:'干粮',g:'🍙',d:'回复20%气血',fx:{heal:.2}},{n:'磨刀石',g:'🪨',d:'全部伤害+2%',fx:{all:1.02}},
@@ -908,10 +908,10 @@ function tryEvent(done){if(!waveRow().ev||evUsed[wave])return false;evUsed[wave]
 function pickPool(){const have=loadout.filter(x=>x);const c=SKID.filter(id=>have.indexOf(id)<0&&(!TIER[id]||wave>=TMIN[TIER[id]])).map(id=>({id,w:FACOF[id]===fac&&fac&&fac!=='xiangyong'?4:1.5}));const r=[];while(r.length<3&&c.length){let t=c.reduce((a,b)=>a+b.w,0),x=Math.random()*t,k=0;for(;k<c.length-1;k++){x-=c[k].w;if(x<=0)break;}r.push(c[k].id);c.splice(k,1);}return r;}
 function pickPassives(){const c=PASSIVES.slice(),r=[];while(r.length<3&&c.length)r.push(c.splice(Math.floor(Math.random()*c.length),1)[0].id);return r;}
 function endWave(){
-  if(paused||over)return;paused=true;settleDrops();{const tx=Math.floor(zq*hyRate());hero.hp=Math.min(hero.maxhp,hero.hp+tx);settle.tx=tx;settle.zq=Math.floor(zq);}
+  if(paused||over)return;paused=true;settleDrops();const pend=loot.splice(0);{const tx=Math.floor(zq*hyRate());hero.hp=Math.min(hero.maxhp,hero.hp+tx);settle.tx=tx;settle.zq=Math.floor(zq);}
   const doNext=()=>{zq=zqMax;hero.hp=Math.min(hero.maxhp,hero.hp+Math.round(30*healMul));wave++;waveT=0;waveK0=kills;waveH0=hitsTaken;paused=false;ov.style.display='none';};
-  const next=()=>{ov.style.display='none';if(!tryEvent(doNext))doNext();};
-  let bagSel=null,tab='sum',opts=pickPassives(),picked=null,rc=0,replacing=null,selSlot='v0';
+  const next=()=>{if(pend.length){let g=0;pend.forEach(it=>g+=sellP(it));silver+=g;floatTxt('自动卖出 '+pend.length+' 件，+'+g+' 银','#ffe28a');pend.length=0;}ov.style.display='none';if(!tryEvent(doNext))doNext();};
+  let bagSel=null,tab=pend.length?'pk':'sum',opts=pickPassives(),picked=null,rc=0,replacing=null,selSlot='v0';
   const SHOP_POOL=[
     {n:'干粮',g:'🍙',d:'回复35%气血',p:30,fx:{heal:.35}},{n:'烈酒',g:'🍶',d:'最大生命+10',p:40,fx:{maxhpAdd:10}},
     {n:'磨刀石',g:'🪨',d:'全部伤害+4%',p:50,fx:{all:1.04}},{n:'草鞋',g:'👞',d:'移速+4%',p:45,fx:{spd:1.04}},
@@ -933,7 +933,7 @@ function endWave(){
   const skCard=(id,extra)=>'<button data-s="'+id+'" '+(picked?'disabled':'')+' style="flex:1 1 '+u(180)+';min-width:'+u(150)+';padding:'+u(14)+';background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4;text-align:center;'+(picked?'opacity:.45':'')+'"><div style="font-size:'+u(44)+'">'+SK[id].g+'</div><div style="font-size:'+u(26)+';font-weight:700">'+SK[id].n+'</div><div style="font-size:'+u(16)+';color:#bfae82;margin-top:4px">'+(TIER[id]?TIER[id]+'阶 · ':'')+(CAT[id]||'')+(FACOF[id]?' · '+FAC[FACOF[id]].n:' · 通用')+'</div><div style="font-size:'+u(15)+';color:#9fb;margin-top:4px">冷却 '+SK[id].cd+' 秒</div></button>';
   function body(){
     if(tab==='sum'){const tot=Object.values(dmgSt).reduce((a,b)=>a+b,0)||1;const dm=Object.keys(dmgSt).map(id=>({id,v:dmgSt[id]})).sort((x,y)=>y.v-x.v).slice(0,5);
-      return '<div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'"><div style="color:#bfae82;font-size:'+u(20)+'">总结</div><div style="font-size:'+u(26)+';margin:'+u(8)+' 0;line-height:1.7">本波击杀　<b style="color:#ffd76a">'+(kills-waveK0)+'</b>　累计 <b>'+kills+'</b><br>银钱　<b style="color:#ffd76a">'+silver+'</b>　受击 <b>'+(hitsTaken-waveH0)+'</b> 次'+(settle&&settle.zq!=null?'<br>调息：真气 <b style="color:#8fd0ff">'+settle.zq+'</b> → 气血 +<b style="color:#9fe6a0">'+settle.tx+'</b>':'')+(settle?'<br>战后自动收回 <b style="color:#ffd76a">'+settle.gs+'</b> 银'+(settle.ls?'　<span style="color:#e08a6a">战场遗失 '+settle.ls+' 银（-30%）</span>':'')+(settle.gi||settle.li?'<br>自动收回物品 '+settle.gi+' 件'+(settle.li?'，遗失 '+settle.li+' 件':''):''):'')+'</div><div style="color:#bfae82;font-size:'+u(20)+';margin-top:'+u(8)+'">输出统计</div>'+(dm.map(x=>'<div style="font-size:'+u(20)+'">'+(SK[x.id]?SK[x.id].g+' '+SK[x.id].n:x.id)+' <span style="float:right;color:#ffd76a">'+Math.round(x.v/tot*100)+'%</span></div>'+bar(x.v,tot,'#c99a3a')).join('')||'<div style="color:#8d7a4a;font-size:'+u(18)+'">暂无</div>')+'</div>'+
+      return '<div style="display:flex;gap:'+u(18)+';flex-wrap:wrap;justify-content:center;width:100%"><div style="'+PAN+';flex:1 1 '+u(330)+';max-width:'+u(520)+'"><div style="color:#bfae82;font-size:'+u(20)+'">总结</div><div style="font-size:'+u(26)+';margin:'+u(8)+' 0;line-height:1.7">本波击杀　<b style="color:#ffd76a">'+(kills-waveK0)+'</b>　累计 <b>'+kills+'</b><br>银钱　<b style="color:#ffd76a">'+silver+'</b>　受击 <b>'+(hitsTaken-waveH0)+'</b> 次'+(settle&&settle.zq!=null?'<br>调息：真气 <b style="color:#8fd0ff">'+settle.zq+'</b> → 气血 +<b style="color:#9fe6a0">'+settle.tx+'</b>':'')+(settle&&(settle.gi||settle.li)?'<br>战后自动收回物品 '+settle.gi+' 件'+(settle.li?'，遗失 '+settle.li+' 件':''):'')+'</div><div style="color:#bfae82;font-size:'+u(20)+';margin-top:'+u(8)+'">输出统计</div>'+(dm.map(x=>'<div style="font-size:'+u(20)+'">'+(SK[x.id]?SK[x.id].g+' '+SK[x.id].n:x.id)+' <span style="float:right;color:#ffd76a">'+Math.round(x.v/tot*100)+'%</span></div>'+bar(x.v,tot,'#c99a3a')).join('')||'<div style="color:#8d7a4a;font-size:'+u(18)+'">暂无</div>')+'</div>'+
       '<div style="'+PAN+';flex:1 1 '+u(260)+';max-width:'+u(420)+'"><div style="color:#bfae82;font-size:'+u(20)+'">状态</div><div style="font-size:'+u(24)+';margin-top:'+u(8)+'">气血 '+Math.ceil(hero.hp)+' / '+hero.maxhp+'</div>'+bar(hero.hp,hero.maxhp,'#b3262c')+'<div style="font-size:'+u(22)+';margin-top:'+u(10)+';line-height:1.7">第 '+wave+' / '+WAVES+' 波结束<br>势力　'+(FAC[fac]?FAC[fac].n:'普通乡勇')+'<br>最高连击　'+comboMax+'<br><span style="color:#bfae82;font-size:'+u(18)+'">下一波开始前回复 '+Math.round(30*healMul)+' 点</span></div></div></div>';}
     if(tab==='xl'){
       if(replacing){return '<div style="'+PAN+';width:100%;max-width:'+u(700)+'"><div style="font-size:'+u(28)+';margin-bottom:'+u(10)+'">'+SK[replacing].g+' '+SK[replacing].n+'　替换哪一格？</div><div style="display:flex;gap:'+u(10)+';flex-wrap:wrap">'+loadout.map((x,i)=>'<button data-r="'+i+'" style="flex:1 1 '+u(110)+';padding:'+u(10)+';background:#2a2114;border:2px solid #7a5f2c;border-radius:10px;color:#f3e7c4"><div style="font-size:'+u(32)+'">'+(SK[x]?SK[x].g:'')+'</div><div style="font-size:'+u(18)+'">'+(SK[x]?SK[x].n:'空')+'</div></button>').join('')+'</div><button id="bk" style="'+BT+';margin-top:'+u(12)+'">返回</button></div>';}
@@ -948,11 +948,13 @@ function endWave(){
       if(kind==='xd')return '<b style="font-size:'+u(26)+'">📜 心得·'+id+'</b><br>选中后，点对应类别的招式或功法，给它加 60 点熟练';
       if(kind==='gf'){const g=GF[id];return '<b style="font-size:'+u(26)+'">'+g.g+' '+g.n+'</b><br>'+g.t+'阶 · '+(g.c?g.c+'配套':'通用')+' · '+'LV'+gfLv(g)+'（熟练 '+Math.floor(gfExp[g.id]||0)+(gfLv(g)<10?'/'+TH[gfLv(g)]:' 已满')+'）<br>'+gfDesc(g);}
       const w=WP[id];return '<b style="font-size:'+u(26)+';color:'+QC[w.q]+'">'+gIc(w,u(34))+' '+w.n+'</b><br>'+QN[w.q]+'品兵器（只改面板，不影响武艺熟练）<br>'+wpDesc(w);};
+    if(tab==='pk'){const info=it=>it.k==='xd'?'<b style="font-size:'+u(26)+'">📜 心得·'+it.id+'</b><br>给对应招式或功法 +60 熟练（拾取后在背包里使用）':dtl(it.k,it.id);
+      return '<div style="width:100%;max-width:'+u(760)+'"><div style="font-size:'+u(19)+';color:#bfae82;margin-bottom:'+u(10)+';line-height:1.5">本波掉落：拾取后不能再卖；没处理的，点“继续”时自动按卖价卖掉</div>'+(pend.length?pend.map((it,i)=>'<div style="'+PAN+';margin-bottom:'+u(10)+';display:flex;gap:'+u(14)+';align-items:center;justify-content:space-between;flex-wrap:wrap"><div style="flex:1 1 '+u(300)+';font-size:'+u(19)+';line-height:1.6;color:#d9cba0">'+info(it)+'</div><div style="display:flex;gap:'+u(10)+'"><button data-pk="'+i+'" style="'+BT+';border-color:#d9b25a;background:#6b4a14">拾取</button><button data-ps="'+i+'" style="'+BT+'">卖 '+sellP(it)+' 银</button></div></div>').join(''):'<div style="color:#8d7a4a;font-size:'+u(22)+';text-align:center;padding:'+u(40)+'">本波没有掉落</div>')+'</div>';}
     let dh='<span style="color:#8d7a4a">点选一个格子或背包物品查看</span>';
-    if(bagSel!=null&&bag[bagSel]){const it=bag[bagSel];dh=dtl(it.k,it.id)+'<br><button data-sell="1" style="'+BT+';margin-top:'+u(8)+'">出售 '+sellP(it)+' 银</button><div style="color:#9fb;font-size:'+u(17)+';margin-top:'+u(6)+'">再点对应的格子即可装备</div>';}
-    else if(selSlot[0]==='v'&&SK[loadout[+selSlot.slice(1)]])dh=dtl('sk',loadout[+selSlot.slice(1)]);
-    else if(selSlot[0]==='g'&&GF[gongfa[+selSlot.slice(1)]])dh=dtl('gf',gongfa[+selSlot.slice(1)]);
-    else if(selSlot[0]==='w'&&WP[weapon])dh=dtl('wp',weapon);
+    if(bagSel!=null&&bag[bagSel]){const it=bag[bagSel];dh=dtl(it.k,it.id)+'<div style="color:#9fb;font-size:'+u(17)+';margin-top:'+u(6)+'">再点对应的格子即可装备（已拾取的不能再卖）</div>';}
+    else if(selSlot[0]==='v'&&SK[loadout[+selSlot.slice(1)]])dh=dtl('sk',loadout[+selSlot.slice(1)])+'<br><button data-un="v'+selSlot.slice(1)+'" style="'+BT+';margin-top:'+u(8)+'">卸下</button>';
+    else if(selSlot[0]==='g'&&GF[gongfa[+selSlot.slice(1)]])dh=dtl('gf',gongfa[+selSlot.slice(1)])+'<br><button data-un="g'+selSlot.slice(1)+'" style="'+BT+';margin-top:'+u(8)+'">卸下</button>';
+    else if(selSlot[0]==='w'&&WP[weapon])dh=dtl('wp',weapon)+'<br><button data-un="w'+0+'" style="'+BT+';margin-top:'+u(8)+'">卸下</button>';
     let est=0;loadout.forEach((id,i)=>{if(id&&yun[i]){const k=SK[id];est+=Math.round((WAVE_T[wave]||60)/((k.cd*wpCd)+(WU[id]||0.3)*1.2+0.15))*(YC[TIER[id]]||4);}});
     const regen=(1+0.6*aEff(13))*(WAVE_T[wave]||60),estH='<div style="margin-top:'+u(8)+';font-size:'+u(16)+';color:#8fd0ff;line-height:1.5">真气 '+zqMax+'（每波开打前回满，另有回复）<br>点亮的运劲灯，下一波约耗 '+est+(est>zqMax+regen?'　<b style="color:#ff9a8a">可能不够</b>':est?'　够用':'')+'<br><span style="color:#8d7a4a">点格子左上角的小灯开关运劲，耗真气换 +35% 伤害和 +20% 范围</span></div>';
     const attrH='<div style="margin-top:'+u(10)+';font-size:'+u(15)+';color:#8fa6bf;line-height:1.6">筋骨 '+aEff(8).toFixed(1)+'（减伤 '+Math.round((1-AP.take)*100)+'%）　避锋 '+aEff(9).toFixed(1)+'（免伤 '+Math.round(dodgeP()*100)+'%）<br>威势 '+aEff(10).toFixed(1)+'（范围 +'+Math.round((RNGB-1)*100)+'%）　杀伐 '+aEff(11).toFixed(1)+'（暴伤 +'+Math.round(critDmg()*100)+'%）<br>气海 '+aEff(12).toFixed(1)+'　回元 '+aEff(13).toFixed(1)+'（调息 '+Math.round(hyRate()*100)+'%）</div>';
@@ -964,11 +966,11 @@ function endWave(){
   function stats(){const c=(l,v)=>'<div style="flex:1 1 '+u(56)+';text-align:center;white-space:nowrap"><div style="font-size:'+u(15)+';color:#bfae82">'+l+'</div><div style="font-size:'+u(19)+';font-weight:700">'+v+'</div></div>';
     return c('气血',Math.ceil(hero.hp)+'/'+hero.maxhp)+c('伤害',pct(allMul))+c('受伤',pct(takeMul))+c('移速',pct(spdMul))+c('闪身',DCD.toFixed(2)+'s')+c('击杀',kills)+c('银钱',silver);}
   function draw(){
-    const tabs=[['sum','结算'],['xl','修炼'],['sh','行商'],['wx','武学']];
+    const tabs=[['sum','结算'],['pk','拾取'+(pend.length?'·'+pend.length:'')],['xl','修炼'],['sh','行商'],['wx','武学']];
     const rf=tab==='xl'?(!picked&&!replacing?'<button id="rf" '+(silver<15+10*rc?'disabled style="opacity:.5;'+BT+'"':'style="'+BT+'"')+'>刷新　'+(15+10*rc)+' 银</button>':''):tab==='sh'?'<button id="rf" '+(silver<20+10*srf?'disabled style="opacity:.5;'+BT+'"':'style="'+BT+'"')+'>刷新　'+(20+10*srf)+' 银</button>':'';
     ov.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:'+u(20)+';box-sizing:border-box;background:rgba(8,6,3,.93);gap:'+u(14)+'">'+
       '<div style="width:100%;display:flex;justify-content:space-between;align-items:center"><div style="margin-left:'+u(64)+';border:2px solid '+GOLD+';padding:'+u(6)+' '+u(16)+';font-size:'+u(26)+';background:#14120f">🪙 '+silver+'</div><div style="font-size:'+u(20)+';color:#bfae82">第 '+wave+' 波结束</div></div>'+
-      '<div style="display:flex;gap:'+u(6)+';width:100%;max-width:'+u(760)+'">'+tabs.map(t=>'<button data-t="'+t[0]+'" style="flex:1;padding:'+u(12)+' 0;font-size:'+u(28)+';background:'+(tab===t[0]?'#6b4a14':'#1b1710')+';border:2px solid '+(tab===t[0]?'#ffd76a':'#6b5426')+';color:#f3e7c4">'+t[1]+'</button>').join('')+'</div>'+
+      '<div style="display:flex;gap:'+u(6)+';width:100%;max-width:'+u(760)+'">'+tabs.map(t=>'<button data-t="'+t[0]+'" style="flex:1;padding:'+u(12)+' 0;font-size:'+u(25)+';background:'+(tab===t[0]?'#6b4a14':'#1b1710')+';border:2px solid '+(tab===t[0]?'#ffd76a':'#6b5426')+';color:#f3e7c4">'+t[1]+'</button>').join('')+'</div>'+
       '<div style="flex:1;width:100%;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding-top:'+u(6)+'">'+body()+'</div>'+
       '<div style="width:100%;max-width:'+u(900)+';display:flex;flex-wrap:wrap;gap:'+u(6)+';background:#14120f;border:'+u(3)+' solid '+GOLD+';padding:'+u(8)+';box-sizing:border-box">'+stats()+'</div>'+
       '<div style="width:100%;max-width:'+u(900)+';display:flex;justify-content:space-between;align-items:center;gap:'+u(12)+'"><div style="min-width:'+u(120)+'">'+rf+'</div><button id="nextW" style="'+BTN+'">继续</button></div></div>';
@@ -986,7 +988,9 @@ function endWave(){
     ov.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const i=+b.dataset.v;if(bagSel!=null&&bag[bagSel]&&bag[bagSel].k==='xd'){if(useXd(bagSel,'v',i))aft();else draw();return;}if(bagSel!=null&&equipFromBag(bagSel,i)){aft();return;}selSlot='v'+i;if(bagSel!=null)bagSel=null;draw();});
     ov.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const i=+b.dataset.g;if(bagSel!=null&&bag[bagSel]&&bag[bagSel].k==='xd'){if(useXd(bagSel,'g',i))aft();else draw();return;}if(bagSel!=null&&equipFromBag(bagSel,i)){aft();return;}selSlot='g'+i;bagSel=null;draw();});
     ov.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{if(bagSel!=null&&equipFromBag(bagSel,0)){aft();return;}selSlot='w0';bagSel=null;draw();});
-    ov.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const it=bag[bagSel];if(!it)return;silver+=sellP(it);bag.splice(bagSel,1);aft();});
+    ov.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pk,it=pend[i];if(!it)return;pend.splice(i,1);if(it.k==='sk')gainSkill(it.id);else if(it.k==='gf')gainGf(it.id);else if(it.k==='wp')gainWp(it.id);else gainXd(it.id);draw();});
+    ov.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ps,it=pend[i];if(!it)return;silver+=sellP(it);pend.splice(i,1);draw();});
+    ov.querySelectorAll('[data-un]').forEach(b=>b.onclick=()=>{const t=b.dataset.un,i=+t.slice(1);if(t[0]==='w'){if(weapon){bag.push({k:'wp',id:weapon});weapon='';recalcGear();}}else if(t[0]==='v'){const id=loadout[i];if(id){bag.push({k:'sk',id});loadout[i]='';buildHud();syncSel();}}else if(t[0]==='g'){const id=gongfa[i];if(id){bag.push({k:'gf',id});gongfa[i]='';recalcGear();}}selSlot='';draw();});
     ov.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{bagSel=+b.dataset.bg;draw();});
   }
   draw();
@@ -1038,18 +1042,19 @@ function tryDash(){
   let l=Math.hypot(ix,iy);if(l<0.1){ix=Math.cos(hero.fa);iy=Math.sin(hero.fa);l=1;}
   hero.dash={t:0,g:0,dx:ix/l,dy:iy/l};sfx('dash');hero.fa=Math.atan2(iy,ix);dashCd=DCD;if(wind){skipFl[wind.i]=0.35;wind=null;qi=(qi+1)%5;qt=0;}
 }
-const drops=[],bag=[];let settle=null,pickR=1,goldMul=1;
+const drops=[],bag=[],loot=[];const HEALI=ITEMS[0];let settle=null,pickR=1,goldMul=1;
 function dropAt(x,y,o){if(drops.length>=80)drops.shift();drops.push(Object.assign({x:x+(Math.random()-.5)*28,y:y+(Math.random()-.5)*12,t:0,ph:Math.random()*6},o));}
-function eligibleScrolls(){const have=loadout.concat(bag.filter(x=>x.k==='sk').map(x=>x.id));return SKID.filter(id=>have.indexOf(id)<0&&(!TIER[id]||wave>=TMIN[TIER[id]]));}
+function eligibleScrolls(){const have=loadout.concat(bag.concat(loot).filter(x=>x.k==='sk').map(x=>x.id));return SKID.filter(id=>have.indexOf(id)<0&&(!TIER[id]||wave>=TMIN[TIER[id]]));}
 function gainSkill(id){const a=isSpell(id)?5:0;let e=-1;for(let i=a;i<a+5;i++)if(!loadout[i]){e=i;break;}if(e>=0){loadout[e]=id;cds[e]=0.2;buildHud();syncSel();floatTxt('习得 '+SK[id].n,'#8fe0ff');}else{bag.push({k:'sk',id});floatTxt('拾得残卷：'+SK[id].n+'（战后可换装）','#8fe0ff');}}
+function lootRoll(tries){const ks=['sk','gf','wp','xd'],w=[35,25,25,15];let order=[];const pool=ks.slice(),ww=w.slice();while(pool.length){let r=Math.random()*ww.reduce((a,b)=>a+b,0),q=0;while(q<ww.length-1&&r>=ww[q]){r-=ww[q];q++;}order.push(pool[q]);pool.splice(q,1);ww.splice(q,1);}
+  for(const k of order){let id=null;if(k==='xd')id=XDC[Math.floor(Math.random()*5)];else{const el=k==='sk'?eligibleScrolls():k==='gf'?eligibleGf():eligibleWp();if(!el.length)continue;let best=-1;for(let t=0;t<tries;t++){const c=el[Math.floor(Math.random()*el.length)],r=k==='sk'?(TMIN[TIER[c]]||0):k==='gf'?GTIER[GF[c].t]:WP[c].q;if(r>best){best=r;id=c;}}}
+    if(id){loot.push({k,id});floatTxt('掉落：'+(k==='xd'?'心得·'+id:k==='sk'?SK[id].n:k==='gf'?GF[id].n:WP[id].n),'#8fe0ff');return;}}}
 function spawnDrops(e,et){const sv=DROP.silver[et];
-  if(et===3){for(let i=0;i<4;i++)dropAt(e.x,e.y,{k:'silver',v:Math.round(sv/4)});}else if(sv)dropAt(e.x,e.y,{k:'silver',v:sv});
-  let ni=Math.random()<DROP.item[et]?1:0;if(et===3)ni=2;
+  if(sv){const g=Math.round(sv*goldMul);silver+=g;if(et>=2)floatTxt('+'+g+' 银','#ffe28a');}
+  if(Math.random()<DROP.heal[et])dropAt(e.x,e.y,{k:'item',it:HEALI});
+  let ni=Math.random()<DROP.item[et]?1:0;if(et===3)ni=1;
   for(let i=0;i<ni;i++){const it=ITEMS[Math.floor(Math.random()*ITEMS.length)];dropAt(e.x,e.y,{k:'item',it});}
-  if(Math.random()<DROP.scroll[et]){const el=eligibleScrolls();if(el.length){let id,best=-1;for(let t=0;t<(et===3?3:1);t++){const c=el[Math.floor(Math.random()*el.length)],r=TMIN[TIER[c]]||0;if(r>best){best=r;id=c;}}dropAt(e.x,e.y,{k:'scroll',id});}}
-  if(Math.random()<DROP.gf[et]){const el=eligibleGf();if(el.length){let id,best=-1;for(let t=0;t<(et===3?3:1);t++){const c=el[Math.floor(Math.random()*el.length)],r=GTIER[GF[c].t];if(r>best){best=r;id=c;}}dropAt(e.x,e.y,{k:'gf',id});}}
-  if(Math.random()<DROP.wp[et]){const el=eligibleWp();if(el.length){let id,best=-1;for(let t=0;t<(et===3?3:1);t++){const c=el[Math.floor(Math.random()*el.length)],r=WP[c].q;if(r>best){best=r;id=c;}}dropAt(e.x,e.y,{k:'wp',id});}}
-  if(Math.random()<DROP.xd[et])dropAt(e.x,e.y,{k:'xd',id:XDC[Math.floor(Math.random()*5)]});}
+  const gn=et===3?2:(Math.random()<DROP.gear[et]?1:0);for(let i=0;i<gn;i++)lootRoll(et===3?3:1);}
 function collect(d){if(d.k==='silver'){silver+=Math.round(d.v*goldMul);floatTxt('+'+Math.round(d.v*goldMul)+' 银','#ffe28a');}else if(d.k==='item'){applyFx(d.it.fx);floatTxt(d.it.n+'：'+d.it.d,'#9fe6a0');}else if(d.k==='scroll')gainSkill(d.id);else if(d.k==='gf')gainGf(d.id);else if(d.k==='wp')gainWp(d.id);else if(d.k==='xd')gainXd(d.id);}
 function settleDrops(){let gs=0,ls=0,gi=0,li=0;for(const d of drops){if(d.k==='silver'){const g=Math.floor(d.v*goldMul*0.7);silver+=g;gs+=g;ls+=Math.round(d.v*goldMul)-g;}else{if(Math.random()<0.7){collect(d);gi++;}else li++;}}drops.length=0;settle={gs,ls,gi,li};}
 function kill(j,p){cbT=2;const e=enemies[j],T=TYPES[e.type];if(e.type==='brute'||e.type==='brute2'){bruteK++;stopT=Math.max(stopT,0.08);shk=Math.max(shk,7);}if(e.type==='archer')archK++;enemies.splice(j,1);kills++;{gainProf(e);zq=Math.min(zqMax,zq+1);if(xj.killHeal)hero.hp=Math.min(hero.maxhp,hero.hp+hero.maxhp*xj.killHeal);if(xj.silverP&&Math.random()<xj.silverP)silver+=3;}{const et=ETIER[e.type]!=null?ETIER[e.type]:0;if(et===0){if(Math.random()<DROP.coin)silver+=1;}spawnDrops(e,et);}combo++;if(combo>comboMax)comboMax=combo;comboT=2;
@@ -1268,8 +1273,8 @@ function recalcGear(){const N={all:1,take:1,spd:1,dcd:1,hp:1,gold:1,pick:1,crit:
   if(N.hp!==GA.hp){const r=N.hp/GA.hp;hero.maxhp=Math.round(hero.maxhp*r);hero.hp=Math.min(hero.maxhp,Math.round(hero.hp*r));}
   Object.assign(GA,N);gearAttr={12:N.qh||0,13:N.hy||0};recalcAttr();calcXj();}
 function normLoadout(){const all=loadout.filter(x=>x);for(let i=0;i<LN;i++)loadout[i]='';for(const id of all){const a=isSpell(id)?5:0;for(let i=a;i<a+5;i++)if(!loadout[i]){loadout[i]=id;break;}}}
-function eligibleGf(){const have=gongfa.concat(bag.filter(x=>x.k==='gf').map(x=>x.id));return GFID.filter(id=>have.indexOf(id)<0&&wave>=TMIN[GF[id].t]);}
-function eligibleWp(){const have=[weapon].concat(bag.filter(x=>x.k==='wp').map(x=>x.id));return WPID.filter(id=>have.indexOf(id)<0&&wave>=QMIN[WP[id].q]);}
+function eligibleGf(){const have=gongfa.concat(bag.concat(loot).filter(x=>x.k==='gf').map(x=>x.id));return GFID.filter(id=>have.indexOf(id)<0&&wave>=TMIN[GF[id].t]);}
+function eligibleWp(){const have=[weapon].concat(bag.concat(loot).filter(x=>x.k==='wp').map(x=>x.id));return WPID.filter(id=>have.indexOf(id)<0&&wave>=QMIN[WP[id].q]);}
 function gainGf(id){const e=gongfa.indexOf('');if(e>=0){gongfa[e]=id;recalcGear();floatTxt('领悟 '+GF[id].n,'#ffd76a');}else{bag.push({k:'gf',id});floatTxt('拾得功法：'+GF[id].n+'（战后可换装）','#ffd76a');}}
 function gainWp(id){if(!weapon){weapon=id;recalcGear();floatTxt('装备 '+WP[id].n,'#ffd76a');}else{bag.push({k:'wp',id});floatTxt('拾得兵器：'+WP[id].n+'（战后可换装）','#ffd76a');}}
 function equipFromBag(bi,slot){const it=bag[bi];if(!it)return false;
@@ -1592,7 +1597,7 @@ const errBox=document.createElement('div');errBox.style.cssText='position:fixed;
 function loop(now){requestAnimationFrame(loop);const dt=Math.max(0,Math.min(0.05,(now-last)/1000));last=now;try{update(dt);draw();}catch(e){errBox.style.display='block';errBox.textContent='出错：'+(e&&e.stack||e);}}
 requestAnimationFrame(loop);
 window.addEventListener('error',e=>{errBox.style.display='block';errBox.textContent='页面错误：'+e.message;});
-window.__gb={zq:()=>[zq,zqMax],yun,aEff,addAttr,recalcAttr,skExp:()=>skExp,gfExp:()=>gfExp,useXd,OA,profOf,xj:()=>xj,hurtHero:null,gainSkill,gainGf,gainWp,gear:()=>({gongfa,weapon,gearAll,gearCat,critP,wpCd,allMul}),GF,WP,drops,bag,SK,loadout,hero,enemies,setPhone:()=>$('vPhone').click(),setS:v=>{S=v;$('sS').value=v;},setN:v=>{setN(v);$('sN').value=v;},endWave,showTip,die:()=>heroDie(),skip:t=>{tclock=t;},setW:t=>{waveT=t;},setWave:n=>{wave=n;}};
+window.__gb={zq:()=>[zq,zqMax],yun,aEff,addAttr,recalcAttr,skExp:()=>skExp,gfExp:()=>gfExp,useXd,OA,profOf,xj:()=>xj,hurtHero:null,gainSkill,gainGf,gainWp,gear:()=>({gongfa,weapon,gearAll,gearCat,critP,wpCd,allMul}),GF,WP,drops,bag,loot,SK,loadout,hero,enemies,setPhone:()=>$('vPhone').click(),setS:v=>{S=v;$('sS').value=v;},setN:v=>{setN(v);$('sN').value=v;},endWave,showTip,die:()=>heroDie(),skip:t=>{tclock=t;},setW:t=>{waveT=t;},setWave:n=>{wave=n;}};
 })();
 
 <@/script>
