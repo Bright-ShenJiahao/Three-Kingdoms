@@ -107,7 +107,7 @@ function resize(){
   if(phoneSim){h=vh-16;w=Math.min(vw-16,Math.round(h*9/19.5));}
   stage.style.width=w+'px';stage.style.height=h+'px';
   DPR=Math.min(devicePixelRatio||1,3);cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
-  const small=matchMedia('(pointer:coarse)').matches||vh<520||phoneSim;VH=small?400:640;stage.style.setProperty('--u',(small?Math.max(h/1000,.62):h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);
+  const small=matchMedia('(pointer:coarse)').matches||vh<520||phoneSim;VH=small?340:480;stage.style.setProperty('--u',(small?Math.max(h/1000,.62):h/1000)+'px');stage.classList.toggle('narrow',w/h<0.8);
 }
 addEventListener('resize',resize);resize();
 const skills=$('skills');
@@ -907,7 +907,7 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8a7444';ctx.fillRect(0,0,W,H);
   // 地面：纵向压扁（同骑兵幸存者的 2.5D）
   ctx.setTransform(kk,0,0,kk*SQ,-x0*kk,-y0*kk*SQ);
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.imageSmoothingEnabled=false;
   let budget=8;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
     const k=ci+','+cj;let ch=chunks.get(k);
@@ -927,6 +927,7 @@ function draw(){
   const list=[];
   for(let i=Math.floor((x0-120)/PCS);i<=Math.floor((x0+vw+120)/PCS);i++)for(let j=Math.floor((y0-120)/PCS);j<=Math.floor((y0+vwy+160)/PCS);j++)for(const p of cellProps(i,j))list.push({y:p.y,p});
   for(let i=Math.floor((x0-60)/110);i<=Math.floor((x0+vw+60)/110);i++)for(let j=Math.floor((y0-60)/110);j<=Math.floor((y0+vwy+80)/110);j++)for(const p of tuftCell(i,j))list.push({y:p.y,p});
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const _a=aimDir();let aimed=true,aimedX=_a[0],aimedY=_a[1];
   list.push({y:hero.y,hero:true});for(const e of enemies)list.push({y:e.y,e});
   list.sort((a,b)=>a.y-b.y);
