@@ -61,6 +61,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   <label><input id="sS" type="range" min="0.5" max="2" step="0.05" value="1"> <span id="vS"></span></label>
   <label style="display:none"><input id="cSnap" type="checkbox"></label>
   <h4>地面</h4>
+  <label>地图布局 <select id="sLay"><option value="classic">经典（零星泥地）</option><option value="war">战场（大片泥地+痕迹）</option><option value="road">驿道（土路贯穿）</option><option value="swamp">沼泽（泥洼+水塘）</option></select></label>
   <label><input id="cGd" type="checkbox"> 高清写实地面（取消勾选 = 像素地面；快捷键 G）</label>
   <h4>地面压扁（1 = 不压扁，越小越斜）</h4>
   <label><input id="sQ" type="range" min="0.5" max="1" step="0.05" value="0.7"> <span id="vQ"></span></label>
@@ -356,11 +357,12 @@ function hsh(x,y,k){let n=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math
 // ===== 无尽地面：分块渲染，每块缓存成画布（做法同骑兵幸存者）=====
 const GS=1.5,TILE=250,CHUNK=512,PK=0.6;
 let GV=(()=>{try{return localStorage.getItem('gvHD')==='1'?'2':'';}catch(e){return '';}})();
+let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return 'classic';}})();
 const chunks=new Map();
 function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const s=TILE*GS/im.width;p.setTransform(new DOMMatrix([s,0,0,s,-ox*GS,-oy*GS]));return p;}
-const tmp=document.createElement('canvas');tmp.width=tmp.height=1024;const tc=tmp.getContext('2d');
+const tmp=document.createElement('canvas');tmp.width=tmp.height=1700;const tc=tmp.getContext('2d');
 function blob(c,x0,y0,k,x,y,r,a,core){
-  const S2=Math.ceil(r*2*GS);tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1024,1024);
+  const S2=Math.ceil(r*2*GS);tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1700,1700);
   tc.fillStyle=gpat(tc,k,x-r,y-r);tc.fillRect(0,0,S2,S2);
   tc.globalCompositeOperation='destination-in';
   const g=tc.createRadialGradient(S2/2,S2/2,S2/2*(core||.5),S2/2,S2/2,S2/2);g.addColorStop(0,'rgba(0,0,0,'+a+')');g.addColorStop(1,'rgba(0,0,0,0)');tc.fillStyle=g;tc.fillRect(0,0,S2,S2);
@@ -370,23 +372,36 @@ function put(c,x0,y0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c
 function buildChunk(ci,cj){
   const cv2=document.createElement('canvas');cv2.width=cv2.height=CHUNK*GS;const c=cv2.getContext('2d'),x0=ci*CHUNK,y0=cj*CHUNK;
   c.fillStyle=gpat(c,'grass',x0,y0);c.fillRect(0,0,cv2.width,cv2.height);
-  const BC=700;
+  const LY=LAY,BC=LY==='war'?520:LY==='road'?900:LY==='swamp'?1000:700;
   for(let i=Math.floor((x0-450)/BC);i<=Math.floor((x0+CHUNK+450)/BC);i++)for(let j=Math.floor((y0-450)/BC);j<=Math.floor((y0+CHUNK+450)/BC);j++){
-    const n=Math.floor(hsh(i,j,101)*3);
-    for(let q=0;q<n;q++){const x=i*BC+hsh(i,j,110+q)*BC,y=j*BC+hsh(i,j,120+q)*BC,r=140+hsh(i,j,130+q)*280;
-      if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,x0,y0,hsh(i,j,140+q)<.45?'dirt':'trod',x,y,r,.9,.35);}
+    const n=Math.floor(hsh(i,j,101)*(LY==='war'?5:LY==='road'?2.4:LY==='swamp'?1.6:3));
+    for(let q=0;q<n;q++){const x=i*BC+hsh(i,j,110+q)*BC,y=j*BC+hsh(i,j,120+q)*BC,r=(LY==='war'?190+hsh(i,j,130+q)*340:140+hsh(i,j,130+q)*280);
+      if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,x0,y0,hsh(i,j,140+q)<.45?'dirt':'trod',x,y,r,LY==='war'?1:.9,LY==='war'?.5:.35);}
   }
-  const MC=1100;
+  if(LY==='road'){
+    const road=(horiz,k0,gap)=>{const L0=horiz?y0:x0,L1=horiz?x0:y0;
+      for(let m=Math.floor((L0-200)/gap);m<=Math.floor((L0+CHUNK+200)/gap);m++){
+        const base=m*gap+hsh(m,k0,5)*gap*.5,ph=hsh(m,k0,6)*6.28,fr=.0022+hsh(m,k0,7)*.002,am=70+hsh(m,k0,8)*90;
+        for(let t=L1-90;t<=L1+CHUNK+90;t+=44){const cc=base+Math.sin(t*fr+ph)*am+Math.sin(t*fr*2.7+ph*1.7)*am*.35;
+          const px=horiz?t:cc,py=horiz?cc:t;if(px<x0-120||px>x0+CHUNK+120||py<y0-120||py>y0+CHUNK+120)continue;
+          blob(c,x0,y0,'dirt',px,py,112,.55,.3);}
+        for(let t=L1-90;t<=L1+CHUNK+90;t+=36){const cc=base+Math.sin(t*fr+ph)*am+Math.sin(t*fr*2.7+ph*1.7)*am*.35;
+          const px=horiz?t:cc,py=horiz?cc:t;if(px<x0-90||px>x0+CHUNK+90||py<y0-90||py>y0+CHUNK+90)continue;
+          blob(c,x0,y0,'trod',px,py,74,1,.55);}
+      }};
+    road(true,1,1500);road(false,2,1900);
+  }
+  const MC=LY==='swamp'?430:LY==='war'?800:1100,MP=LY==='swamp'?.8:LY==='war'?.5:.35;
   for(let i=Math.floor((x0-300)/MC);i<=Math.floor((x0+CHUNK+300)/MC);i++)for(let j=Math.floor((y0-300)/MC);j<=Math.floor((y0+CHUNK+300)/MC);j++){
-    if(hsh(i,j,201)>.35)continue;const x=i*MC+hsh(i,j,210)*MC,y=j*MC+hsh(i,j,220)*MC,r=90+hsh(i,j,230)*60;
+    if(hsh(i,j,201)>MP)continue;const x=i*MC+hsh(i,j,210)*MC,y=j*MC+hsh(i,j,220)*MC,r=(LY==='swamp'?110:90)+hsh(i,j,230)*(LY==='swamp'?110:60);
     if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,x0,y0,'mud',x,y,r,1,.55);
-    if(hsh(i,j,240)<.5)put(c,x0,y0,hsh(i,j,241)<.5?'pond1':'pond2',x,y+10,1);
+    if(hsh(i,j,240)<(LY==='swamp'?.75:.5))put(c,x0,y0,hsh(i,j,241)<.5?'pond1':'pond2',x,y+10,1);
   }
   const CL=110;
   for(let i=Math.floor((x0-70)/CL);i<=Math.floor((x0+CHUNK+70)/CL);i++)for(let j=Math.floor((y0-70)/CL);j<=Math.floor((y0+CHUNK+70)/CL);j++){
     const x=i*CL+hsh(i,j,301)*CL,y=j*CL+hsh(i,j,302)*CL,r=hsh(i,j,303);
-    if(r<.42){}
-    else if(r<.46)put(c,x0,y0,['rubble','flat'][Math.floor(hsh(i,j,306)*2)],x,y,1);
+    if(r<(LY==='war'?.3:.42)){}
+    else if(r<(LY==='war'?.4:.46))put(c,x0,y0,['rubble','flat'][Math.floor(hsh(i,j,306)*2)],x,y,1);
     else if(r<.49)put(c,x0,y0,'dec'+(1+Math.floor(hsh(i,j,307)*3)),x,y,.9);
   }
   return cv2;
@@ -606,6 +621,8 @@ $('sS').oninput=e=>{S=+e.target.value;};
 $('sN').oninput=e=>{setN(+e.target.value);};
 $('sQ').oninput=e=>{SQ=+e.target.value;};
 const setGV=hd=>{GV=hd?'2':'';chunks.clear();try{localStorage.setItem('gvHD',hd?'1':'0');}catch(e){}const c=$('cGd');if(c)c.checked=!!hd;};
+const setLay=v=>{LAY=v;chunks.clear();try{localStorage.setItem('lay',v);}catch(e){}$('sLay').value=v;};
+$('sLay').value=LAY;$('sLay').onchange=e=>setLay(e.target.value);
 $('cGd').checked=!!GV;$('cGd').onchange=e=>setGV(e.target.checked);
 addEventListener('keydown',e=>{if((e.key==='g'||e.key==='G')&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setGV(!GV);});
 $('cHud').onchange=e=>{$('hud').classList.toggle('off',!e.target.checked);};
