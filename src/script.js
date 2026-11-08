@@ -375,7 +375,7 @@ const FACOF={};for(const k in FAC)(FAC[k].tags||[]).forEach(t=>FACOF[t]=k);
 function applyFac(id){fac=id;if(FAC[id])applyFx(FAC[id].fx);}
 function calcGrade(win){const sc=Math.round((Math.min(wave,WAVES)/WAVES)*40+(win?20:0)+(win?hero.hp/hero.maxhp*10:0)+(hitsTaken<=5?15:hitsTaken<=12?8:hitsTaken<=25?3:0)+Math.min(10,kills/40)+Math.min(5,comboMax/30));
  const g=sc>=85?'名将':sc>=70?'校尉':sc>=55?'都伯':sc>=35?'伍长':'小卒';return {score:sc,grade:g};}
-function hurt(e,d,dx,dy,kb){if(e.inv||e.hide)return;if(ampT>0)d*=1.4;d*=profMul()*titleMul(e);const cc0=curK?CAT[curK.id]:'';const crit=Math.random()<critP+(xj.critC[cc0]||0);if(crit)d*=1.5+critDmg()+(xj.critD[cc0]||0);if(dnums.length<50)dnums.push({x:e.x+(Math.random()*14-7),y:e.y,t:0,v:Math.max(1,Math.round(d*10)),crit});if(crit||e.type==='brute'||e.type==='brute2'){stopT=Math.max(stopT,crit?0.05:0.035);shk=Math.max(shk,crit?5:3);}e.hitT=0.2;e.flashT=0.09;sfx((e.hp-d<=0)?'kill':(e.type==='immortal'?'shield':'hit'));if(fxs.length<140)spark(e.x,e.y,dx,dy);if(curK)dmgSt[curK.id]=(dmgSt[curK.id]||0)+Math.round(Math.min(d,Math.max(e.hp,0)+0.0001)*10);if(!isFinite(dx)||!isFinite(dy)){dx=0;dy=0;}e.hp-=d;if(e.hp<=0){const j=enemies.indexOf(e);if(j>=0)kill(j,{dx,dy});}else{kb*=(TYPES[e.type].kbm||1);e.x+=dx*kb;e.y+=dy*kb/SQ;}}
+function hurt(e,d,dx,dy,kb){if(e.inv||e.hide)return;if(ampT>0)d*=1.4;d*=profMul()*titleMul(e);const cc0=curK?CAT[curK.id]:'';if(hasGf('xingyun')&&shi)d*=1+.06*shi;if(hasGf('beishui')&&hero.hp<hero.maxhp*.3)d*=1.25;const lf=hasGf('lhj')&&noHitT>=3;if(lf){noHitT=0;floatTxt('连环劲','#ffd76a');}const crit=lf||Math.random()<critP+(xj.critC[cc0]||0);if(crit)d*=1.5+critDmg()+(xj.critD[cc0]||0);if(dnums.length<50)dnums.push({x:e.x+(Math.random()*14-7),y:e.y,t:0,v:Math.max(1,Math.round(d*10)),crit});if(crit||e.type==='brute'||e.type==='brute2'){stopT=Math.max(stopT,crit?0.05:0.035);shk=Math.max(shk,crit?5:3);}e.hitT=0.2;e.flashT=0.09;sfx((e.hp-d<=0)?'kill':(e.type==='immortal'?'shield':'hit'));if(fxs.length<140)spark(e.x,e.y,dx,dy);if(curK)dmgSt[curK.id]=(dmgSt[curK.id]||0)+Math.round(Math.min(d,Math.max(e.hp,0)+0.0001)*10);if(!isFinite(dx)||!isFinite(dy)){dx=0;dy=0;}e.hp-=d;if(e.hp<=0){const j=enemies.indexOf(e);if(j>=0)kill(j,{dx,dy});}else{kb*=(TYPES[e.type].kbm||1);e.x+=dx*kb;e.y+=dy*kb/SQ;}}
 function aimDir(){const n=nearest(1,600)[0];if(n){const ex=n.x-hero.x,ey=(n.y-hero.y)*SQ,l=Math.hypot(ex,ey)||1;return [ex/l,ey/l];}return [Math.cos(hero.fa),Math.sin(hero.fa)];}
 function rndPts(k,maxd){maxd*=0.6;const ts=nearest(30,maxd).sort(()=>Math.random()-0.5).slice(0,k).map(e=>[e.x,e.y]);while(ts.length<k){const a=Math.random()*6.283,r=80+Math.random()*150;ts.push([hero.x+Math.cos(a)*r,hero.y+Math.sin(a)*r/SQ]);}return ts;}
 function inC(x,y,r,f){for(const e of enemies.slice()){const dx=e.x-x,dy=(e.y-y)*SQ;if(dx*dx+dy*dy<(r+TYPES[e.type].r*S*0.6)**2)f(e,dx,dy);}}
@@ -508,7 +508,20 @@ const GF={
  taiping:{n:'太平清领心经',t:'天',c:'',g:'☯',d:'全部伤害 +12%，受到伤害 -6%',x:{all:1.12,take:.94}},
  hunyuan:{n:'混元一气功',t:'天',c:'',g:'🌀',d:'全部伤害 +8%，生命 +10%，暴击 +3%',x:{all:1.08,hp:1.1,crit:.03}}};
 [['短兵','刀',['快刀心法','断水心经','破军心经','霸王心经']],['长兵','枪',['抖枪诀','贯虹心法','龙胆心经','无双心经']],['射艺','弓',['听风诀','穿云心经','追月心经','落日心经']],['体术','拳',['熊经诀','金钟罩','铁骨功','不动明王功']],['术法','符',['引气诀','通玄心法','紫气心经','太平玄元经']]].forEach(([c,g,ns],ci)=>ns.forEach((n,t)=>{GF['gf'+ci+t]={n,t:'黄玄地天'[t],c,g,d:'',x:{}};}));
+Object.assign(GF,{
+ qingshen:{n:'轻身术',t:'黄',c:'',g:'🍃',d:'闪身冷却 -8%',x:{dcd:.92}},
+ juqi:{n:'聚气诀',t:'玄',c:'',g:'🌀',d:'气海 +1，回元 +1',x:{qh:1,hy:1}},
+ shixue:{n:'嗜血功',t:'玄',c:'',g:'🩸',d:'每次击杀回复 0.6% 生命',x:{}},
+ beishui:{n:'背水一战',t:'地',c:'',g:'🔥',d:'生命低于 30% 时，全部伤害 +25%，受到伤害 -10%',x:{}},
+ lhj:{n:'连环劲',t:'地',c:'',g:'⛓',d:'连续 3 秒不受伤，下一次攻击必定暴击',x:{}},
+ caoshang:{n:'草上飞',t:'黄',c:'',g:'🌾',d:'轻功：跑动时脚下留风痕，敌人踩上减速 30%',x:{}},
+ xingyun:{n:'行云诀',t:'玄',c:'',g:'☁',d:'轻功：每跑一段路积 1 层势（最多 5），每层伤害 +6%；停下后每 1.5 秒散 1 层',x:{}},
+ taxue:{n:'踏雪无痕',t:'地',c:'',g:'❄',d:'轻功：跑动时受到伤害 -15%',x:{}},
+ tiesha:{n:'铁砂掌劲',t:'地',c:'',g:'✋',d:'轻功：闪身把周围敌人击退更远，并僵直 0.5 秒',x:{}},
+ yufeng:{n:'御风而行',t:'天',c:'',g:'🌪',d:'轻功：跑动时身周不断扫出风刃，移速越快范围越大',x:{}}
+});
 const GFID=Object.keys(GF);
+const hasGf=id=>gongfa.indexOf(id)>=0;let noHitT=0,shi=0,shiD=0,shiT=0,trailT=0,ywT=0;const trail=[];
 // ---- 武器：只有造型与面板，不绑定武艺 ----
 const WPRICE=[40,90,170,300],WQ={atk:[1.04,1.09,1.15,1.24],cd:[1,.98,.95,.9],crit:[0,.01,.03,.06]};
 const WP={};
@@ -574,7 +587,7 @@ Object.assign(RC,{saodang:.3,lianhuan:.35,longyin:.35,qijin:.5,susi:.15,chuanyan
 // ===== 地天阶功法·心诀 =====
 for(const id in GF)GF[id].id=id;
 const GX={gf02:{critC:{'短兵':.10}},gf03:{critC:{'短兵':.10},critD:{'短兵':.5}},gf12:{critC:{'长兵':.10}},gf13:{critC:{'长兵':.10},critD:{'长兵':.5}},gf22:{critC:{'射艺':.10}},gf23:{critC:{'射艺':.10},critD:{'射艺':.5}},gf42:{critC:{'术法':.10}},gf43:{critC:{'术法':.10},critD:{'术法':.5}},
- gf32:{block:.10},gf33:{block:.10,still:.4},jubao:{silverP:.05},taiping:{killHeal:.004},hunyuan:{killHeal:.002}};
+ gf32:{block:.10},gf33:{block:.10,still:.4},jubao:{silverP:.05},shixue:{killHeal:.006},taiping:{killHeal:.004},hunyuan:{killHeal:.002}};
 const GXD={gf02:'心诀：该类招式暴击率 +10%',gf03:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf12:'心诀：该类招式暴击率 +10%',gf13:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf22:'心诀：该类招式暴击率 +10%',gf23:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf42:'心诀：该类招式暴击率 +10%',gf43:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',
  gf32:'心诀：10% 概率格挡一次伤害',gf33:'心诀：10% 概率格挡；站定不动 1 秒后受到伤害 -40%',jubao:'心诀：击杀时 5% 概率多得 3 银',taiping:'心诀：每次击杀回复 0.4% 生命',hunyuan:'心诀：每次击杀回复 0.2% 生命'};
 let xj={critC:{},critD:{},block:0,still:0,silverP:0,killHeal:0},stillT=0;
@@ -643,7 +656,7 @@ function renderStatus(){const L=[];
   stEl.innerHTML=L.map(x=>'<span style="background:rgba(20,14,8,.72);border:1px solid rgba(200,170,100,.45);border-radius:6px;padding:calc(var(--u)*2) calc(var(--u)*8);font-size:calc(var(--u)*16);color:'+x[2]+';white-space:nowrap">'+x[0]+' '+x[1]+'</span>').join('');}
 function floatTxt(t,c){texts.push({x:hero.x,y:hero.y,t:0,s:t,c:c||'#ffe28a'});}
 function hitHero(dmg){if(hero.dash){if(!hero.dash.pf){hero.dash.pf=true;pdCnt++;ampT=3;floatTxt('完美闪避');}return;}sfx('hurt');
-  if(hurtT>0||atkMul<=0)return;if(dodgeP()>0&&Math.random()<dodgeP()){hurtT=0.3;floatTxt('避锋','#bfe6ff');return;}if(xj.block&&Math.random()<xj.block){hurtT=0.3;floatTxt('格挡','#9fe6ff');return;}const d=Math.max(1,Math.round(dmg*atkMul*takeMul*(xj.still&&stillT>1?1-xj.still:1)));hero.hp-=d;hurtT=0.5;rgT=4;hitsTaken++;if(wave<=4)hitsW4++;stopT=Math.max(stopT,0.05);shk=Math.max(shk,6);floatTxt('-'+d,'#ff6a5a');if(hero.hp<=0){hero.hp=0;heroDie();}}
+  if(hurtT>0||atkMul<=0)return;if(dodgeP()>0&&Math.random()<dodgeP()){hurtT=0.3;floatTxt('避锋','#bfe6ff');return;}if(xj.block&&Math.random()<xj.block){hurtT=0.3;floatTxt('格挡','#9fe6ff');return;}const d=Math.max(1,Math.round(dmg*atkMul*takeMul*(xj.still&&stillT>1?1-xj.still:1)*(hasGf('taxue')&&hero.moving?.85:1)*(hasGf('beishui')&&hero.hp<hero.maxhp*.3?.9:1)));hero.hp-=d;noHitT=0;hurtT=0.5;rgT=4;hitsTaken++;if(wave<=4)hitsW4++;stopT=Math.max(stopT,0.05);shk=Math.max(shk,6);floatTxt('-'+d,'#ff6a5a');if(hero.hp<=0){hero.hp=0;heroDie();}}
 function resolveAtk(e,T){const a=e.atk;
   if(T.ranged){arrows.push({x:e.x,y:e.y,dx:a.dx,dy:a.dy,t:0,dmg:T.dmg});return;}
   let hit;if(T.ring){const dx=hero.x-a.x,dy=(hero.y-a.y)*SQ/0.75;hit=dx*dx+dy*dy<a.r*a.r;}else{const dx=hero.x-e.x,dy=(hero.y-e.y)*SQ;hit=dx*dx+dy*dy<(a.r*1.15)**2;}
@@ -738,9 +751,14 @@ function update(dt){
   if(stick){ix+=stick.dx;iy+=stick.dy;}
   stiff=Math.max(0,stiff-dt);hurtT=Math.max(0,hurtT-dt);ampT=Math.max(0,ampT-dt);cbT=Math.max(0,cbT-dt);rgT=Math.max(0,rgT-dt);for(let i=texts.length-1;i>=0;i--){texts[i].t+=dt;if(texts[i].t>1)texts.splice(i,1);}popT=Math.max(0,popT-dt);for(let i=0;i<LN;i++)skipFl[i]=Math.max(0,skipFl[i]-dt);
   const il=Math.hypot(ix,iy);hero.moving=il>0.08&&stiff<=0;stillT=hero.moving?0:stillT+dt;
-  dashCd=Math.max(0,dashCd-dt);
+  dashCd=Math.max(0,dashCd-dt);noHitT+=dt;
+  if(hero.moving||hero.dash){shiT=0;if(hasGf('xingyun')){shiD+=76*spdMul*dt;if(shiD>=150){shiD=0;shi=Math.min(5,shi+1);}}
+    if(hasGf('caoshang')){trailT-=dt;if(trailT<=0){trailT=.18;trail.push({x:hero.x,y:hero.y,t:2});if(trail.length>24)trail.shift();}}
+    if(hasGf('yufeng')){ywT-=dt;if(ywT<=0){ywT=.4;const R=46*S*spdMul;effects.push({t:0,x:hero.x,y:hero.y,dx:0,dy:0});for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(e.x-hero.x,(e.y-hero.y)*SQ)<R+TYPES[e.type].r*S){hurt(e,1.2*(WP[weapon]?WP[weapon].atk:1),e.x-hero.x,(e.y-hero.y)*SQ,0);if(e.hp<=0)kill(j);}}}}}
+  else{shiD=0;if(shi>0){shiT+=dt;if(shiT>=1.5){shiT=0;shi--;}}}
+  for(let j=trail.length-1;j>=0;j--){trail[j].t-=dt;if(trail[j].t<=0)trail.splice(j,1);}
   const SP=76*spdMul;
-  if(hero.dash){const D=hero.dash;D.t+=dt;D.g+=dt;const dsp=105/0.24;hero.x+=D.dx*dsp*dt;hero.y+=D.dy*dsp*dt/SQ;if(D.g>0.03){D.g=0;ghosts.push({x:hero.x,y:hero.y,fa:hero.fa,a:0.5,f:Math.floor(hero.wk)%8});}for(const e of enemies){const ex=e.x-hero.x,ey=(e.y-hero.y)*SQ,dd=Math.hypot(ex,ey);if(dd<34*S&&dd>0.1){e.x+=ex/dd*5;e.y+=ey/dd*5/SQ;}}if(D.t>=0.24){hero.dash=null;stiff=0.12;}hero.moving=true;hero.wk+=dt*14;}
+  if(hero.dash){const D=hero.dash;D.t+=dt;D.g+=dt;const dsp=105/0.24;hero.x+=D.dx*dsp*dt;hero.y+=D.dy*dsp*dt/SQ;if(D.g>0.03){D.g=0;ghosts.push({x:hero.x,y:hero.y,fa:hero.fa,a:0.5,f:Math.floor(hero.wk)%8});}for(const e of enemies){const ex=e.x-hero.x,ey=(e.y-hero.y)*SQ,dd=Math.hypot(ex,ey);if(dd<(hasGf('tiesha')?60:34)*S&&dd>0.1){const pw=hasGf('tiesha')?12:5;e.x+=ex/dd*pw;e.y+=ey/dd*pw/SQ;if(pw>5&&!TYPES[e.type].boss)e.stn=.5;}}if(D.t>=0.24){hero.dash=null;stiff=0.12;}hero.moving=true;hero.wk+=dt*14;}
   else if(stiff>0){hero.wk=0;}
   else if(hero.moving){const m=Math.min(1,il)/il;hero.x+=ix*m*SP*dt;hero.y+=iy*m*SP*dt/SQ;hero.fa=Math.atan2(iy,ix);hero.wk+=dt*7.5;}
   else hero.wk=0;
@@ -751,7 +769,7 @@ function update(dt){
     if(retreatT>0){e.atk=null;e.sk=null;continue;}
     if(e.hitT>0)e.hitT-=dt;if(e.flashT>0)e.flashT-=dt;if(e.strikeT>0)e.strikeT-=dt;
     e.acd=(e.acd==null?Math.random()*1.2:e.acd)-dt;
-    const spE=T.sp*(T.boss?1:ESPD)*(e.haste>0?1.3:1);if(e.haste>0)e.haste-=dt;
+    if(e.stn>0){e.stn-=dt;continue;}let spE=T.sp*(T.boss?1:ESPD)*(e.haste>0?1.3:1);if(e.haste>0)e.haste-=dt;if(trail.length&&!T.boss){for(const q of trail)if(Math.hypot(q.x-e.x,(q.y-e.y)*SQ)<30*S){spE*=.7;break;}}
     if(BOSSAI[e.type]){bossAI(e,T,dt,dx,dy,d,spE*(e.rage?1.25:1));continue;}
     if(e.atk){e.atk.t+=dt;if(e.atk.t>=e.atk.dur){resolveAtk(e,T);e.atk=null;e.strikeT=0.22;e.acd=T.ac;}continue;}
     if(e.skcd==null)e.skcd=2+Math.random()*5;e.skcd-=dt;
@@ -893,6 +911,7 @@ function draw(){
   ctx.setTransform(kk,0,0,kk,-x0*kk,-y0*SQ*kk);
   for(const g of ghosts)drawHero(g.x,g.y*SQ,g.fa,g.f,S,g.a);
   zoneDraw();
+  if(trail.length||shi){ctx.save();for(const q of trail){ctx.globalAlpha=Math.min(.5,q.t/2*.5);ctx.fillStyle='#bfe9c0';ctx.beginPath();ctx.ellipse(q.x,q.y*SQ,24*S,9*S,0,0,7);ctx.fill();}ctx.globalAlpha=.9;ctx.fillStyle='#e8f6ff';for(let j=0;j<shi;j++){ctx.beginPath();ctx.arc(hero.x+(j-(shi-1)/2)*9*S,hero.y*SQ+6*S,3*S,0,7);ctx.fill();}ctx.restore();}
   for(const e of enemies){const sk=e.sk;if(sk&&sk.k==='charge'&&sk.ph===0){ctx.save();ctx.strokeStyle='rgba(240,70,50,'+(0.25+0.5*sk.t/0.55)+')';ctx.lineWidth=(3+4*sk.t/0.55)*S;ctx.setLineDash([8*S,6*S]);ctx.beginPath();ctx.moveTo(e.x,e.y*SQ);ctx.lineTo(e.x+sk.dx*(sk.big?320:200)*S,e.y*SQ+sk.dy*(sk.big?320:200)*S);ctx.stroke();ctx.restore();}const a=e.atk;if(!a)continue;const Tt=TYPES[e.type];const k=a.t/a.dur,sy=a.y*SQ;
     if(Tt.ranged){ctx.save();ctx.strokeStyle='rgba(240,70,50,'+(0.25+0.5*k)+')';ctx.lineWidth=(2+3*k)*S;ctx.setLineDash([8*S,6*S]);ctx.beginPath();ctx.moveTo(e.x,e.y*SQ);ctx.lineTo(e.x+a.dx*340*S,e.y*SQ+a.dy*340*S);ctx.stroke();ctx.restore();continue;}
     if(!Tt.ring)continue;ctx.save();ctx.fillStyle='rgba(225,45,35,'+(0.10+0.12*k)+')';ctx.strokeStyle='rgba(240,70,50,.9)';ctx.lineWidth=1.5;
