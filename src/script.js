@@ -33,11 +33,28 @@ let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return
 const chunks=new Map();
 function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const s=TILE*GS/im.width;p.setTransform(new DOMMatrix([s,0,0,s,-ox*GS,-oy*GS]));return p;}
 const tmp=document.createElement('canvas');tmp.width=tmp.height=1700;const tc=tmp.getContext('2d');
-function blob(c,x0,y0,k,x,y,r,a,core){
+function blobSoft(c,x0,y0,k,x,y,r,a,core){
   const S2=Math.ceil(r*2*GS);tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1700,1700);
   tc.fillStyle=gpat(tc,k,x-r,y-r);tc.fillRect(0,0,S2,S2);
   tc.globalCompositeOperation='destination-in';
   const g=tc.createRadialGradient(S2/2,S2/2,S2/2*(core||.5),S2/2,S2/2,S2/2);g.addColorStop(0,'rgba(0,0,0,'+a+')');g.addColorStop(1,'rgba(0,0,0,0)');tc.fillStyle=g;tc.fillRect(0,0,S2,S2);
+  c.drawImage(tmp,0,0,S2,S2,(x-r-x0)*GS,(y-r-y0)*GS,S2,S2);
+}
+const mkc=document.createElement('canvas'),mkx=mkc.getContext('2d');
+function blob(c,x0,y0,k,x,y,r,a,core){
+  if(GV)return blobSoft(c,x0,y0,k,x,y,r,a,core);
+  const S2=Math.ceil(r*2*GS),P=4,n=Math.ceil(S2/P),seed=(Math.floor(x*7+y*13)&1023)+1;
+  tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1700,1700);tc.imageSmoothingEnabled=false;
+  tc.fillStyle=gpat(tc,k,x-r,y-r);tc.fillRect(0,0,S2,S2);
+  mkc.width=mkc.height=n;const id=mkx.createImageData(n,n),d=id.data;tc.fillStyle='rgba(20,12,4,0.22)';
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+    const dx=(i+.5)/n*2-1,dy=(j+.5)/n*2-1,th=Math.atan2(dy,dx);
+    const w=0.78+0.13*Math.sin(th*3+seed)+0.07*Math.sin(th*7+seed*1.7)+0.04*Math.sin(th*13+seed*2.3);
+    const t=Math.hypot(dx,dy)/w;let al=0;
+    if(t<0.9)al=1;else if(t<1)al=hsh(i,j,seed)<(1-t)/0.1?1:0;
+    if(al){d[(j*n+i)*4+3]=Math.round(255*a);if(t>0.8)tc.fillRect(i*P,j*P,P,P);}
+  }
+  mkx.putImageData(id,0,0);tc.globalCompositeOperation='destination-in';tc.drawImage(mkc,0,0,n*P,n*P);
   c.drawImage(tmp,0,0,S2,S2,(x-r-x0)*GS,(y-r-y0)*GS,S2,S2);
 }
 function put(c,x0,y0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c.drawImage(im,(x-M.ax*s-x0)*GS,(y-M.ay*s-y0)*GS,M.w*s*GS,M.h*s*GS);}
