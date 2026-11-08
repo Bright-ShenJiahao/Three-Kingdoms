@@ -71,7 +71,7 @@ const SECTS=[
  {n:'铁甲方',from:10,to:14,u:['tiejia','zhongdun','tiejiashuai']},
  {n:'骑兵方',from:12,to:19,u:['qingqi','gongqi','tieqishuai']},
  {n:'太平道方',from:14,to:20,u:['daotu','fangshi','jijiu']}];
-const HP_SCALE=0.07; // 每过一波，非首领血量 +7%
+const HP_SCALE=0.09; // 每过一波，非首领血量 +7%
 WAVE_TABLE.forEach((row,i)=>{const w=i+1,mix={};for(const S of SECTS){if(w<S.from||w>S.to)continue;const k=w-S.from;mix[S.u[0]]=100;if(k>=1)mix[S.u[1]]=40;if(k>=2)mix[S.u[2]]=8;}row.mix=mix;row.b2=0;});
 // 势力：fx 为声明式效果（maxhp/spd/take/all/dcd/ranged/melee/heal=乘数；cb/rg=开关）
 const FAC={xiangyong:{n:'普通乡勇',up:'无',dn:'无'},
