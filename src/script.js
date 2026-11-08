@@ -587,7 +587,7 @@ Object.assign(RC,{saodang:.3,lianhuan:.35,longyin:.35,qijin:.5,susi:.15,chuanyan
 // ===== 地天阶功法·心诀 =====
 for(const id in GF)GF[id].id=id;
 for(const id in SK)if(ASSETS.img['sk_'+id])SK[id].ic='sk_'+id;for(const id in GF)if(ASSETS.img['gf_'+id])GF[id].ic='gf_'+id;
-const ITIC={'干粮':'it_0','磨刀石':'it_1','草鞋':'it_2','烈酒':'it_3','参汤':'it_4'};ITEMS.forEach(x=>{if(ITIC[x.n])x.ic=ITIC[x.n];});PASSIVES.forEach(x=>{if(ASSETS.img['ps_'+x.id])x.ic='ps_'+x.id;});
+const ITIC={'干粮':'it_0','磨刀石':'it_1','草鞋':'it_2','烈酒':'it_3','参汤':'it_4','护心镜':'it_hux','火折子':'it_huozhe'};ITEMS.forEach(x=>{if(ITIC[x.n])x.ic=ITIC[x.n];});PASSIVES.forEach(x=>{if(ASSETS.img['ps_'+x.id])x.ic='ps_'+x.id;});
 const GX={gf02:{critC:{'短兵':.10}},gf03:{critC:{'短兵':.10},critD:{'短兵':.5}},gf12:{critC:{'长兵':.10}},gf13:{critC:{'长兵':.10},critD:{'长兵':.5}},gf22:{critC:{'射艺':.10}},gf23:{critC:{'射艺':.10},critD:{'射艺':.5}},gf42:{critC:{'术法':.10}},gf43:{critC:{'术法':.10},critD:{'术法':.5}},
  gf32:{block:.10},gf33:{block:.10,still:.4},jubao:{silverP:.05},shixue:{killHeal:.006},taiping:{killHeal:.004},hunyuan:{killHeal:.002}};
 const GXD={gf02:'心诀：该类招式暴击率 +10%',gf03:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf12:'心诀：该类招式暴击率 +10%',gf13:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf22:'心诀：该类招式暴击率 +10%',gf23:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',gf42:'心诀：该类招式暴击率 +10%',gf43:'心诀：该类招式暴击率 +10%，暴击伤害 +50%',

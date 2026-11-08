@@ -52,6 +52,8 @@ import json as _jj
 _UI=_jj.load(open(P('art','ui','ui.json')))
 _keep=['c_tl','c_tr','c_bl','c_br','b_go','b_n','o_nong','o_gong','o_zu','o_ma','o_shu','t_wanren','t_pojun','t_tiebi','t_jifeng','t_zhanjiang','t_shenshe','pframe']
 _U={k:_UI[k] for k in _keep}
+for _k in ('wanren','tiebi','jifeng','zhanjiang','pojun','shenshe'): _U['t_'+_k]=b64(P('assets','ic','ti_'+_k+'.png'))
+for _k in ('xiangyong','liubei','guanjun','caocao','sunjian','dongzhuo','huangjin'): _U['f_'+_k]=b64(P('assets','ic','fc_'+_k+'.png'))
 _css="""<style>
 .pn:before,.pn:after{display:none}*{scrollbar-width:thin;scrollbar-color:#6a5028 transparent}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#6a5028;border-radius:3px}::-webkit-scrollbar-corner{background:transparent}.pn{overflow-x:hidden!important;overflow-y:auto!important}
 .cn{position:absolute;width:46px;height:46px;pointer-events:none;z-index:3;background-size:contain;background-repeat:no-repeat}
@@ -70,7 +72,7 @@ _js2="""<script>(function(){const N=['nong','gong','zu','ma','shu'];document.que
 document.querySelectorAll('.pn').forEach(p=>{[['tl','left:0;top:0'],['tr','right:0;top:0'],['bl','left:0;bottom:0'],['br','right:0;bottom:0']].forEach(([k,pos])=>{const d=document.createElement('div');d.className='cn';d.style.cssText=pos+';background-image:url('+UI['c_'+k]+')';p.appendChild(d)})})})()</script>"""
 cfg=cfg.replace('</head>',_js+_css+'</head>',1)
 FJS=r'''<script>(function(){const F=(window.__CFG&&window.__CFG.facs)||{have:[],wear:'',defs:{}};window.__fc=F.have.indexOf(F.wear)>=0?F.wear:'xiangyong';const S=document.getElementById('fcs'),D=document.getElementById('fcd');
-function draw(){const d=F.defs[window.__fc];D.innerHTML=d?'<b style="color:#f0d89a">'+d.n+'</b>　增：'+d.up+'；减：'+d.dn:''}
+function draw(){const d=F.defs[window.__fc];D.innerHTML=d?(window.UI&&UI['f_'+window.__fc]?'<img src="'+UI['f_'+window.__fc]+'" style="width:34px;height:34px;vertical-align:middle;margin-right:6px">':'')+'<b style="color:#f0d89a">'+d.n+'</b>　增：'+d.up+'；减：'+d.dn:''}
 S.innerHTML=Object.keys(F.defs).map(x=>{const h=F.have.indexOf(x)>=0,d=F.defs[x];return '<option value="'+x+'"'+(h?'':' disabled')+(x===window.__fc?' selected':'')+'>'+(h?'■ ':'🔒 ')+d.n+(h?'':'（'+d.cond+'）')+'</option>'}).join('');
 S.onchange=()=>{window.__fc=S.value;draw()};draw()})()</script>'''
 cfg=cfg.replace('</body>',FJS+_js2+'</body>',1)
