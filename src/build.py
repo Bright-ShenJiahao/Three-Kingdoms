@@ -17,6 +17,7 @@ for _k,_n in (('immortal',6),('pcav8',8),('comp8',8)):
     M[_k]=meta(R+'/'+_k+'/meta.js')
     for d in M[_k]['dirs']:
         for i in range(_n): img['%s_%s%d'%(_k,d,i)]=b64('%s/%s/%s%d.png'%(R,_k,d,i))
+for _i in range(16): img['wp%d'%_i]=b64('%s/wp/wp%d.png'%(R,_i))
 img['hj2_atlas']=b64(P('art','hj2_art','hj2_atlas_q.png'))
 M['hj2']=json.load(open(P('art','hj2_art','hj2_atlas.json')))
 img['hj3_atlas']=b64(P('art','hj3_art','hj3_atlas_q.png'))
