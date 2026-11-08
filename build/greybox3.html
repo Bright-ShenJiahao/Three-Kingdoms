@@ -1294,7 +1294,7 @@ function draw(){
   let budget=2;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
     const k=ci+','+cj;let ch=chunks.get(k);
-    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>60)chunks.delete(chunks.keys().next().value);}
+    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>Math.ceil(vw/CHUNK+3)*Math.ceil(vwy/CHUNK+3)+2)chunks.delete(chunks.keys().next().value);}
     if(ch)ctx.drawImage(ch,ch._gx-camX,ch._gy-camY);
   }
   if(budget===2){let done=0;for(let ci=Math.floor(x0/CHUNK)-1;ci<=Math.floor((x0+vw)/CHUNK)+1&&!done;ci++)for(let cj=Math.floor(y0/CHUNK)-1;cj<=Math.floor((y0+vwy)/CHUNK)+1&&!done;cj++){const k=ci+','+cj;if(!chunks.has(k)){try{const ch=buildChunk(ci,cj);chunks.set(k,ch);}catch(e){}done=1;}}}
