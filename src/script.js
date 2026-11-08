@@ -28,8 +28,9 @@ function hsh(x,y,k){let n=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math
 
 // ===== 无尽地面：分块渲染，每块缓存成画布（做法同骑兵幸存者）=====
 const GS=1.5,TILE=250,CHUNK=512,PK=0.6;
+let GV=(()=>{try{return localStorage.getItem('gvHD')==='1'?'2':'';}catch(e){return '';}})();
 const chunks=new Map();
-function gpat(c,k,ox,oy){const im=IMG['g_'+k];const p=c.createPattern(im,'repeat');const s=TILE*GS/im.width;p.setTransform(new DOMMatrix([s,0,0,s,-ox*GS,-oy*GS]));return p;}
+function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const s=TILE*GS/im.width;p.setTransform(new DOMMatrix([s,0,0,s,-ox*GS,-oy*GS]));return p;}
 const tmp=document.createElement('canvas');tmp.width=tmp.height=1024;const tc=tmp.getContext('2d');
 function blob(c,x0,y0,k,x,y,r,a,core){
   const S2=Math.ceil(r*2*GS);tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1024,1024);
@@ -277,6 +278,9 @@ $('gear').onclick=()=>$('panel').classList.toggle('open');
 $('sS').oninput=e=>{S=+e.target.value;};
 $('sN').oninput=e=>{setN(+e.target.value);};
 $('sQ').oninput=e=>{SQ=+e.target.value;};
+const setGV=hd=>{GV=hd?'2':'';chunks.clear();try{localStorage.setItem('gvHD',hd?'1':'0');}catch(e){}const c=$('cGd');if(c)c.checked=!!hd;};
+$('cGd').checked=!!GV;$('cGd').onchange=e=>setGV(e.target.checked);
+addEventListener('keydown',e=>{if((e.key==='g'||e.key==='G')&&!e.ctrlKey&&!e.metaKey&&!/INPUT|TEXTAREA/.test((e.target||{}).tagName||''))setGV(!GV);});
 $('cHud').onchange=e=>{$('hud').classList.toggle('off',!e.target.checked);};
 $('bGua').onclick=endWave;
 $('vAuto').onclick=()=>{phoneSim=false;$('vAuto').classList.add('act');$('vPhone').classList.remove('act');resize();};
@@ -907,7 +911,7 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8a7444';ctx.fillRect(0,0,W,H);
   // 地面：纵向压扁（同骑兵幸存者的 2.5D）
   ctx.setTransform(kk,0,0,kk*SQ,-x0*kk,-y0*kk*SQ);
-  ctx.imageSmoothingEnabled=false;
+  ctx.imageSmoothingEnabled=!!GV;if(GV)ctx.imageSmoothingQuality='high';
   let budget=8;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
     const k=ci+','+cj;let ch=chunks.get(k);
