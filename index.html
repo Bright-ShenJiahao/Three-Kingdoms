@@ -790,7 +790,7 @@ const mkc=document.createElement('canvas'),mkx=mkc.getContext('2d');
 function blob(c,gx0,gy0,k,x,y,r,a,core){
   const rx=r*kk,ry=r*kk*SQ,W=Math.min(2800,Math.ceil(rx*2)),Hh=Math.min(2800,Math.ceil(ry*2));
   const lx=Math.round(x*kk-gx0-rx),ly=Math.round(y*kk*SQ-gy0-ry);
-  tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,2800,2800);tc.imageSmoothingEnabled=!!GV;
+  tc.save();tc.setTransform(1,0,0,1,0,0);tc.beginPath();tc.rect(0,0,W,Hh);tc.clip();tc.globalCompositeOperation='source-over';tc.clearRect(0,0,W,Hh);tc.imageSmoothingEnabled=!!GV;
   tc.fillStyle=gpat(tc,k,gx0+lx,gy0+ly);tc.fillRect(0,0,W,Hh);
   tc.globalCompositeOperation='destination-in';
   if(GV){
@@ -810,8 +810,9 @@ function blob(c,gx0,gy0,k,x,y,r,a,core){
     }
     mkx.putImageData(id,0,0);tc.globalCompositeOperation='destination-in';tc.imageSmoothingEnabled=false;tc.drawImage(mkc,0,0,nx*P,ny*P);
   }
-  c.drawImage(tmp,0,0,W,Hh,lx,ly,W,Hh);
+  tc.restore();c.drawImage(tmp,0,0,W,Hh,lx,ly,W,Hh);
 }
+window.__bc=buildChunk;
 function put(c,gx0,gy0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c.imageSmoothingEnabled=true;c.drawImage(im,(x-M.ax*s)*kk-gx0,(y-M.ay*s)*kk*SQ-gy0,M.w*s*kk,M.h*s*kk*SQ);}
 const gmc={};function gMean(){const key='g'+GV+'_grass';if(gmc[key])return gmc[key];const q=document.createElement('canvas');q.width=q.height=1;const x=q.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(IMG[key],0,0,1,1);const d=x.getImageData(0,0,1,1).data;return gmc[key]='rgb('+d[0]+','+d[1]+','+d[2]+')';}
 function buildChunk(ci,cj){
@@ -1713,12 +1714,13 @@ function draw(){
   // 地面：纵向压扁（同骑兵幸存者的 2.5D）
   ctx.setTransform(1,0,0,1,0,0);const gk=[Math.round(kk*100),SQ,GV,LAY,ATM].join('|');if(gk!==GKEY){GKEY=gk;chunks.clear();}
   ctx.imageSmoothingEnabled=false;const camX=Math.round(x0*kk),camY=Math.round(y0*kk*SQ);
-  let budget=8;
+  let budget=2;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
     const k=ci+','+cj;let ch=chunks.get(k);
-    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>30)chunks.delete(chunks.keys().next().value);}
+    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>60)chunks.delete(chunks.keys().next().value);}
     if(ch)ctx.drawImage(ch,ch._gx-camX,ch._gy-camY);
   }
+  if(budget===2){let done=0;for(let ci=Math.floor(x0/CHUNK)-1;ci<=Math.floor((x0+vw)/CHUNK)+1&&!done;ci++)for(let cj=Math.floor(y0/CHUNK)-1;cj<=Math.floor((y0+vwy)/CHUNK)+1&&!done;cj++){const k=ci+','+cj;if(!chunks.has(k)){try{const ch=buildChunk(ci,cj);chunks.set(k,ch);}catch(e){}done=1;}}}
   // 精灵：不压扁，位置按 y*SQ 投影
   ctx.setTransform(kk,0,0,kk,-x0*kk,-y0*SQ*kk);
   for(const g of ghosts)drawHero(g.x,g.y*SQ,g.fa,g.f,S,g.a);
@@ -1753,11 +1755,11 @@ function draw(){
   for(const p of slashes)drawCrescent(p);
   for(const f of fxs)f.drw&&f.drw(f.t);
   for(const p of arrows){ctx.save();ctx.strokeStyle='#f6e6b0';ctx.lineWidth=2*S;ctx.beginPath();ctx.moveTo(p.x,p.y*SQ-18*S);ctx.lineTo(p.x+p.dx*14*S,p.y*SQ-18*S+p.dy*14*S);ctx.stroke();ctx.restore();}
-  if(ATM){const cw=cv.width,ch=cv.height;if(!window._ov||_ov.width!==cw||_ov.height!==ch){const o=_ov=document.createElement('canvas');o.width=cw;o.height=ch;const x=o.getContext('2d');
+  if(ATM){const cw=cv.width,ch=cv.height;if(!window._ov||_ov._w!==cw||_ov._h!==ch){const o=_ov=document.createElement('canvas');const sc=.25;o.width=Math.ceil(cw*sc);o.height=Math.ceil(ch*sc);const x=o.getContext('2d');x.scale(sc,sc);o._w=cw;o._h=ch;
     x.fillStyle='rgba(255,170,80,.10)';x.fillRect(0,0,cw,ch);
     let g=x.createLinearGradient(0,0,0,ch*.45);g.addColorStop(0,'rgba(236,206,152,.30)');g.addColorStop(1,'rgba(236,206,152,0)');x.fillStyle=g;x.fillRect(0,0,cw,ch*.45);
     g=x.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)*.38,cw/2,ch/2,Math.hypot(cw,ch)*.58);g.addColorStop(0,'rgba(30,14,4,0)');g.addColorStop(1,'rgba(30,14,4,.42)');x.fillStyle=g;x.fillRect(0,0,cw,ch);}
-    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(_ov,0,0);ctx.restore();}
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(_ov,0,0,cw,ch);ctx.restore();}
   if(retreatT>0){ctx.save();ctx.setTransform(1,0,0,1,0,0);const cw=cv.width,ch=cv.height,al=Math.min(1,retreatT/0.4,(RT-retreatT)/0.2);ctx.globalAlpha=al;ctx.font='bold '+(ch*0.12)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=ch*0.012;ctx.strokeStyle='#000';ctx.fillStyle='#ffd86a';ctx.strokeText('鸣金收兵',cw/2,ch*0.38);ctx.fillText('鸣金收兵',cw/2,ch*0.38);ctx.restore();}
   for(const n of dnums){const k=n.t/0.7;ctx.save();ctx.globalAlpha=Math.min(1,(1-k)*1.6);ctx.font='bold '+((n.crit?19:13)*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=n.crit?'#ffb030':'#fff';const ty=n.y*SQ-34*S-k*26*S-(n.crit?Math.sin(Math.min(1,k*3)*Math.PI)*8:0);ctx.strokeText(n.v,n.x,ty);ctx.fillText(n.v,n.x,ty);ctx.restore();}
   for(const t of texts){ctx.save();ctx.globalAlpha=Math.max(0,1-t.t);ctx.font='bold '+(16*S)+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle=t.c;const ty=t.y*SQ-60*S-t.t*28;ctx.strokeText(t.s,t.x,ty);ctx.fillText(t.s,t.x,ty);ctx.restore();}
