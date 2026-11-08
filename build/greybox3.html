@@ -357,43 +357,47 @@ function hsh(x,y,k){let n=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math
 // ===== 无尽地面：分块渲染，每块缓存成画布（做法同骑兵幸存者）=====
 const GS=1.5,TILE=250,CHUNK=512,PK=0.6;
 let GV=(()=>{try{return localStorage.getItem('gvHD')==='1'?'2':'';}catch(e){return '';}})();
-let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return 'classic';}})();
+let GKEY='';let LAY=(()=>{try{return localStorage.getItem('lay')||'classic';}catch(e){return 'classic';}})();
 const chunks=new Map();
-function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const s=TILE*GS/im.width;p.setTransform(new DOMMatrix([s,0,0,s,-ox*GS,-oy*GS]));return p;}
-const tmp=document.createElement('canvas');tmp.width=tmp.height=1700;const tc=tmp.getContext('2d');
-function blobSoft(c,x0,y0,k,x,y,r,a,core){
-  const S2=Math.ceil(r*2*GS);tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1700,1700);
-  tc.fillStyle=gpat(tc,k,x-r,y-r);tc.fillRect(0,0,S2,S2);
-  tc.globalCompositeOperation='destination-in';
-  const g=tc.createRadialGradient(S2/2,S2/2,S2/2*(core||.5),S2/2,S2/2,S2/2);g.addColorStop(0,'rgba(0,0,0,'+a+')');g.addColorStop(1,'rgba(0,0,0,0)');tc.fillStyle=g;tc.fillRect(0,0,S2,S2);
-  c.drawImage(tmp,0,0,S2,S2,(x-r-x0)*GS,(y-r-y0)*GS,S2,S2);
-}
+const GNf=()=>GV?Math.max(1,Math.round(kk*0.94)):Math.max(1,Math.round(kk*0.73));
+function gpat(c,k,ox,oy){const im=IMG['g'+GV+'_'+k];const p=c.createPattern(im,'repeat');const n=GNf();p.setTransform(new DOMMatrix([n,0,0,n,-ox,-oy]));return p;}
+const tmp=document.createElement('canvas');tmp.width=tmp.height=2800;const tc=tmp.getContext('2d');
 const mkc=document.createElement('canvas'),mkx=mkc.getContext('2d');
-function blob(c,x0,y0,k,x,y,r,a,core){
-  if(GV)return blobSoft(c,x0,y0,k,x,y,r,a,core);
-  const S2=Math.ceil(r*2*GS),P=4,n=Math.ceil(S2/P),seed=(Math.floor(x*7+y*13)&1023)+1;
-  tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,1700,1700);tc.imageSmoothingEnabled=false;
-  tc.fillStyle=gpat(tc,k,x-r,y-r);tc.fillRect(0,0,S2,S2);
-  mkc.width=mkc.height=n;const id=mkx.createImageData(n,n),d=id.data;tc.fillStyle='rgba(20,12,4,0.22)';
-  for(let j=0;j<n;j++)for(let i=0;i<n;i++){
-    const dx=(i+.5)/n*2-1,dy=(j+.5)/n*2-1,th=Math.atan2(dy,dx);
-    const w=0.78+0.13*Math.sin(th*3+seed)+0.07*Math.sin(th*7+seed*1.7)+0.04*Math.sin(th*13+seed*2.3);
-    const t=Math.hypot(dx,dy)/w;let al=0;
-    if(t<0.9)al=1;else if(t<1)al=hsh(i,j,seed)<(1-t)/0.1?1:0;
-    if(al){d[(j*n+i)*4+3]=Math.round(255*a);if(t>0.8)tc.fillRect(i*P,j*P,P,P);}
+function blob(c,gx0,gy0,k,x,y,r,a,core){
+  const rx=r*kk,ry=r*kk*SQ,W=Math.min(2800,Math.ceil(rx*2)),Hh=Math.min(2800,Math.ceil(ry*2));
+  const lx=Math.round(x*kk-gx0-rx),ly=Math.round(y*kk*SQ-gy0-ry);
+  tc.setTransform(1,0,0,1,0,0);tc.globalCompositeOperation='source-over';tc.clearRect(0,0,2800,2800);tc.imageSmoothingEnabled=!!GV;
+  tc.fillStyle=gpat(tc,k,gx0+lx,gy0+ly);tc.fillRect(0,0,W,Hh);
+  tc.globalCompositeOperation='destination-in';
+  if(GV){
+    const f=rx/ry;tc.setTransform(1,0,0,1/f,0,0);
+    const g=tc.createRadialGradient(W/2,Hh/2*f,W/2*(core||.5),W/2,Hh/2*f,W/2);g.addColorStop(0,'rgba(0,0,0,'+a+')');g.addColorStop(1,'rgba(0,0,0,0)');tc.fillStyle=g;tc.fillRect(0,0,W,Hh*f);tc.setTransform(1,0,0,1,0,0);
+  }else{
+    const P=Math.max(3,GNf()*3),nx=Math.ceil(W/P),ny=Math.ceil(Hh/P),seed=(Math.floor(x*7+y*13)&1023)+1;
+    // 暗边先画在源上
+    tc.globalCompositeOperation='source-over';
+    mkc.width=nx;mkc.height=ny;const id=mkx.createImageData(nx,ny),d=id.data;tc.fillStyle='rgba(20,12,4,0.22)';
+    for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+      const dx=(i+.5)/nx*2-1,dy=(j+.5)/ny*2-1,th=Math.atan2(dy,dx);
+      const w=0.78+0.13*Math.sin(th*3+seed)+0.07*Math.sin(th*7+seed*1.7)+0.04*Math.sin(th*13+seed*2.3);
+      const t=Math.hypot(dx,dy)/w;let al=0;
+      if(t<0.9)al=1;else if(t<1)al=hsh(i,j,seed)<(1-t)/0.1?1:0;
+      if(al){d[(j*nx+i)*4+3]=Math.round(255*a);if(t>0.8)tc.fillRect(i*P,j*P,P,P);}
+    }
+    mkx.putImageData(id,0,0);tc.globalCompositeOperation='destination-in';tc.imageSmoothingEnabled=false;tc.drawImage(mkc,0,0,nx*P,ny*P);
   }
-  mkx.putImageData(id,0,0);tc.globalCompositeOperation='destination-in';tc.drawImage(mkc,0,0,n*P,n*P);
-  c.drawImage(tmp,0,0,S2,S2,(x-r-x0)*GS,(y-r-y0)*GS,S2,S2);
+  c.drawImage(tmp,0,0,W,Hh,lx,ly,W,Hh);
 }
-function put(c,x0,y0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c.drawImage(im,(x-M.ax*s-x0)*GS,(y-M.ay*s-y0)*GS,M.w*s*GS,M.h*s*GS);}
+function put(c,gx0,gy0,k,x,y,s){const M=META.props[k],im=IMG['p_'+k];s=(s||1)*PK;c.imageSmoothingEnabled=true;c.drawImage(im,(x-M.ax*s)*kk-gx0,(y-M.ay*s)*kk*SQ-gy0,M.w*s*kk,M.h*s*kk*SQ);}
 function buildChunk(ci,cj){
-  const cv2=document.createElement('canvas');cv2.width=cv2.height=CHUNK*GS;const c=cv2.getContext('2d'),x0=ci*CHUNK,y0=cj*CHUNK;
-  c.fillStyle=gpat(c,'grass',x0,y0);c.fillRect(0,0,cv2.width,cv2.height);
+  const gx0=Math.round(ci*CHUNK*kk),gy0=Math.round(cj*CHUNK*kk*SQ),gx1=Math.round((ci+1)*CHUNK*kk)+1,gy1=Math.round((cj+1)*CHUNK*kk*SQ)+1;
+  const cv2=document.createElement('canvas');cv2.width=gx1-gx0;cv2.height=gy1-gy0;cv2._gx=gx0;cv2._gy=gy0;const c=cv2.getContext('2d'),x0=ci*CHUNK,y0=cj*CHUNK;c.imageSmoothingEnabled=!!GV;
+  c.fillStyle=gpat(c,'grass',gx0,gy0);c.fillRect(0,0,cv2.width,cv2.height);
   const LY=LAY,BC=LY==='war'?520:LY==='road'?900:LY==='swamp'?1000:700;
   for(let i=Math.floor((x0-450)/BC);i<=Math.floor((x0+CHUNK+450)/BC);i++)for(let j=Math.floor((y0-450)/BC);j<=Math.floor((y0+CHUNK+450)/BC);j++){
     const n=Math.floor(hsh(i,j,101)*(LY==='war'?5:LY==='road'?2.4:LY==='swamp'?1.6:3));
     for(let q=0;q<n;q++){const x=i*BC+hsh(i,j,110+q)*BC,y=j*BC+hsh(i,j,120+q)*BC,r=(LY==='war'?190+hsh(i,j,130+q)*340:140+hsh(i,j,130+q)*280);
-      if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,x0,y0,hsh(i,j,140+q)<.45?'dirt':'trod',x,y,r,LY==='war'?1:.9,LY==='war'?.5:.35);}
+      if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,gx0,gy0,hsh(i,j,140+q)<.45?'dirt':'trod',x,y,r,LY==='war'?1:.9,LY==='war'?.5:.35);}
   }
   if(LY==='road'){
     const road=(horiz,k0,gap)=>{const L0=horiz?y0:x0,L1=horiz?x0:y0;
@@ -401,25 +405,25 @@ function buildChunk(ci,cj){
         const base=m*gap+hsh(m,k0,5)*gap*.5,ph=hsh(m,k0,6)*6.28,fr=.0022+hsh(m,k0,7)*.002,am=70+hsh(m,k0,8)*90;
         for(let t=L1-90;t<=L1+CHUNK+90;t+=44){const cc=base+Math.sin(t*fr+ph)*am+Math.sin(t*fr*2.7+ph*1.7)*am*.35;
           const px=horiz?t:cc,py=horiz?cc:t;if(px<x0-120||px>x0+CHUNK+120||py<y0-120||py>y0+CHUNK+120)continue;
-          blob(c,x0,y0,'dirt',px,py,112,.55,.3);}
+          blob(c,gx0,gy0,'dirt',px,py,112,.55,.3);}
         for(let t=L1-90;t<=L1+CHUNK+90;t+=36){const cc=base+Math.sin(t*fr+ph)*am+Math.sin(t*fr*2.7+ph*1.7)*am*.35;
           const px=horiz?t:cc,py=horiz?cc:t;if(px<x0-90||px>x0+CHUNK+90||py<y0-90||py>y0+CHUNK+90)continue;
-          blob(c,x0,y0,'trod',px,py,74,1,.55);}
+          blob(c,gx0,gy0,'trod',px,py,74,1,.55);}
       }};
     road(true,1,1500);road(false,2,1900);
   }
   const MC=LY==='swamp'?430:LY==='war'?800:1100,MP=LY==='swamp'?.8:LY==='war'?.5:.35;
   for(let i=Math.floor((x0-300)/MC);i<=Math.floor((x0+CHUNK+300)/MC);i++)for(let j=Math.floor((y0-300)/MC);j<=Math.floor((y0+CHUNK+300)/MC);j++){
     if(hsh(i,j,201)>MP)continue;const x=i*MC+hsh(i,j,210)*MC,y=j*MC+hsh(i,j,220)*MC,r=(LY==='swamp'?110:90)+hsh(i,j,230)*(LY==='swamp'?110:60);
-    if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,x0,y0,'mud',x,y,r,1,.55);
-    if(hsh(i,j,240)<(LY==='swamp'?.75:.5))put(c,x0,y0,hsh(i,j,241)<.5?'pond1':'pond2',x,y+10,1);
+    if(x+r<x0||x-r>x0+CHUNK||y+r<y0||y-r>y0+CHUNK)continue;blob(c,gx0,gy0,'mud',x,y,r,1,.55);
+    if(hsh(i,j,240)<(LY==='swamp'?.75:.5))put(c,gx0,gy0,hsh(i,j,241)<.5?'pond1':'pond2',x,y+10,1);
   }
   const CL=110;
   for(let i=Math.floor((x0-70)/CL);i<=Math.floor((x0+CHUNK+70)/CL);i++)for(let j=Math.floor((y0-70)/CL);j<=Math.floor((y0+CHUNK+70)/CL);j++){
     const x=i*CL+hsh(i,j,301)*CL,y=j*CL+hsh(i,j,302)*CL,r=hsh(i,j,303);
     if(r<(LY==='war'?.3:.42)){}
-    else if(r<(LY==='war'?.4:.46))put(c,x0,y0,['rubble','flat'][Math.floor(hsh(i,j,306)*2)],x,y,1);
-    else if(r<.49)put(c,x0,y0,'dec'+(1+Math.floor(hsh(i,j,307)*3)),x,y,.9);
+    else if(r<(LY==='war'?.4:.46))put(c,gx0,gy0,['rubble','flat'][Math.floor(hsh(i,j,306)*2)],x,y,1);
+    else if(r<.49)put(c,gx0,gy0,'dec'+(1+Math.floor(hsh(i,j,307)*3)),x,y,.9);
   }
   return cv2;
 }
@@ -1271,13 +1275,13 @@ function draw(){
   const cx=hero.x,cy=hero.y,x0=cx-vw/2,y0=cy-vwy/2;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8a7444';ctx.fillRect(0,0,W,H);
   // 地面：纵向压扁（同骑兵幸存者的 2.5D）
-  ctx.setTransform(kk,0,0,kk*SQ,-x0*kk,-y0*kk*SQ);
-  ctx.imageSmoothingEnabled=!!GV;if(GV)ctx.imageSmoothingQuality='high';
+  ctx.setTransform(1,0,0,1,0,0);const gk=[Math.round(kk*100),SQ,GV,LAY].join('|');if(gk!==GKEY){GKEY=gk;chunks.clear();}
+  ctx.imageSmoothingEnabled=false;const camX=Math.round(x0*kk),camY=Math.round(y0*kk*SQ);
   let budget=8;
   for(let ci=Math.floor(x0/CHUNK);ci<=Math.floor((x0+vw)/CHUNK);ci++)for(let cj=Math.floor(y0/CHUNK);cj<=Math.floor((y0+vwy)/CHUNK);cj++){
     const k=ci+','+cj;let ch=chunks.get(k);
-    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>90)chunks.delete(chunks.keys().next().value);}
-    if(ch)ctx.drawImage(ch,ci*CHUNK,cj*CHUNK,CHUNK+0.5,CHUNK+0.5);
+    if(!ch&&budget>0){budget--;try{ch=buildChunk(ci,cj);}catch(e){ch=document.createElement('canvas');ch.width=ch.height=8;const q=ch.getContext('2d');q.fillStyle='#8a7444';q.fillRect(0,0,8,8);errBox.style.display='block';errBox.textContent='地块出错：'+e;}chunks.set(k,ch);if(chunks.size>30)chunks.delete(chunks.keys().next().value);}
+    if(ch)ctx.drawImage(ch,ch._gx-camX,ch._gy-camY);
   }
   // 精灵：不压扁，位置按 y*SQ 投影
   ctx.setTransform(kk,0,0,kk,-x0*kk,-y0*SQ*kk);
